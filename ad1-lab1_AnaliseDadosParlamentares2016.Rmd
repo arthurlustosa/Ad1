@@ -26,7 +26,8 @@ gasto.por.tipo <- data %>%
 ```{r, fig.width = 12, fig.height = 7}
 #plotando histograma ordenado por valores totais dos gastos
 histograma1 <- ggplot(data=gasto.por.tipo, aes(x=reorder(txtDescricao, valor.total), y=valor.total)) + 
-  geom_bar(stat = "identity") + coord_flip() +  
+  geom_bar(stat = "identity") +
+  coord_flip() +  
   labs(title = "Panorama geral - Gastos deputados federais", x = "Nome do gasto", y = "Valor total")
 
 histograma1
@@ -34,3 +35,57 @@ histograma1
 ``` 
 
 O histograma acima mostra, no geral, os gastos dos deputados de acordo com o seu valor total. Observamos que o maior gastor que nossos deputados realizam é com Divulgação de atividades parlamentares e o menor gasto foi com Locação ou fretamento de embarcações.
+
+
+####Filtrando por partidos
+```{r}
+#quantidade de deputados por partido
+quant.dep.partidos <- data %>%
+  select(sgPartido, txNomeParlamentar) %>% 
+  distinct() %>%
+  group_by(sgPartido) %>%
+  summarise(total = n())
+
+#plotando quantidade de deputados por partido
+quant.dep.partidos.histograma <- ggplot(data=quant.dep.partidos, aes(x=reorder(sgPartido, total), y=total)) + 
+  geom_bar(stat="identity") +
+  coord_flip() +
+  labs(title="Quantidade de Deputados por partido", x="Partido", y="Total")
+quant.dep.partidos.histograma
+```
+
+O histograma acima mostra a quantidade de deputados de cada partido.
+
+###Filtrando partidos por quantidade de gastos
+```{r}
+#gastos por partido
+gastos.por.partido <- data %>%
+  filter(vlrDocumento>0 & vlrLiquido>0) %>%
+  select(sgPartido, txNomeParlamentar, vlrDocumento) %>%
+  distinct() %>%
+  group_by(sgPartido) %>%
+  summarise(total = sum(vlrDocumento))
+
+hist.gastos.por.partido <- ggplot(data=gastos.por.partido, aes(x=reorder(sgPartido, total), y=total)) + 
+  geom_bar(stat="identity") +
+  coord_flip() +
+  labs(title="Quantidade de Gastos por partido", x="Partido", y="Total")
+hist.gastos.por.partido
+
+```
+
+O histograma acima mostra a os gastos por partido. Comparando com a quantidade de deputados por partidos vemos que a um gráfico reflete o outro, quanto mais deputados por partido mais gastos o partido tem.
+
+```{r}
+data.positivo <- data %>%
+  filter(vlrDocumento>0 & vlrLiquido>0) 
+  
+
+cota.dept.pb <- data.positivo %>%
+  filter(sgUF=="PB") %>%
+  group_by(txNomeParlamentar) %>%
+  summarise(valor.total.por.dep=sum(vlrDocumento)/12)
+
+
+```
+
