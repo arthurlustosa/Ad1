@@ -1,9 +1,10 @@
 ---
-title: "Dados Parlamentares 2016"
+title: "Análise dos Dados Parlamentares 2016"
 output: html_document
-author: Arthur 
+author: Arthur Lustosa
+date: 08/07/2016
 ---
-```{r}
+```{r, echo=FALSE}
 #install.packages("dplyr")
 #install.packages("ggplot2")
 library(dplyr, warn.conflicts = FALSE)
@@ -19,16 +20,17 @@ gasto.por.tipo <- data %>%
   group_by(txtDescricao) %>% 
   summarise(valor.total = sum(vlrDocumento))
 ```
+### Discplina de Análise de Dados 1- Ciência da Computação UFCG - 2016.1
+####Histograma de gastos com seus respectivos valores
 
-##Histograma de gastos com seus respectivos valores
-
-```{r}
-#ordenando gastos por valores totais
-
-
-#plotando histograma 
-histograma1 <- ggplot(data=gasto.por.tipo, aes(x=valor.total, y=txtDescricao)) 
+```{r, fig.width = 12, fig.height = 7}
+#plotando histograma ordenado por valores totais dos gastos
+histograma1 <- ggplot(data=gasto.por.tipo, aes(x=reorder(txtDescricao, valor.total), y=valor.total)) + 
+  geom_bar(stat = "identity") + coord_flip() +  
+  labs(title = "Panorama geral - Gastos deputados federais", x = "Nome do gasto", y = "Valor total")
 
 histograma1
 
 ``` 
+
+O histograma acima mostra, no geral, os gastos dos deputados de acordo com o seu valor total. Observamos que o maior gastor que nossos deputados realizam é com Divulgação de atividades parlamentares e o menor gasto foi com Locação ou fretamento de embarcações.
