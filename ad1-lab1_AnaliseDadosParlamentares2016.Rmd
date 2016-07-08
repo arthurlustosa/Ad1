@@ -4,9 +4,11 @@ output: html_document
 author: Arthur 
 ---
 ```{r}
+#install.packages("dplyr")
+#install.packages("ggplot2")
 library(dplyr, warn.conflicts = FALSE)
 library(ggplot2)
-data <- read.csv("/home/arthurls/workspace/ciencia-de-dados-1/dados/ano-atual.csv")
+data <- read.csv("/home/arthurls/workspace/lab1-ad1/dados/ano-atual.csv")
 
 #vendo os tipos de gastos
 tiposGastos <- unique(data$txtDescricao)
@@ -21,7 +23,12 @@ gasto.por.tipo <- data %>%
 ##Histograma de gastos com seus respectivos valores
 
 ```{r}
-valor.do.gasto <- gasto.por.tipo$valor.total
-plot(valor.do.gasto)
+#ordenando gastos por valores totais
+
+
+#plotando histograma 
+histograma1 <- ggplot(data=gasto.por.tipo, aes(x=valor.total, y=txtDescricao)) 
+
+histograma1
 
 ``` 
