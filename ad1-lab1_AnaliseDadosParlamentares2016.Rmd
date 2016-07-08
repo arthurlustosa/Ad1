@@ -4,8 +4,6 @@ output: html_document
 author: Arthur 
 ---
 ```{r}
-
-installed.packages()
 library(dplyr, warn.conflicts = FALSE)
 library(ggplot2)
 data <- read.csv("/home/arthurls/workspace/ciencia-de-dados-1/dados/ano-atual.csv")
@@ -18,16 +16,12 @@ tiposGastos <- unique(data$txtDescricao)
 gasto.por.tipo <- data %>% 
   group_by(txtDescricao) %>% 
   summarise(valor.total = sum(vlrDocumento))
-
 ```
 
-
-Histograma de gastos com seus respectivos valores
+##Histograma de gastos com seus respectivos valores
 
 ```{r}
 valor.do.gasto <- gasto.por.tipo$valor.total
-hist(valor.do.gasto, right=FALSE)
-
 plot(valor.do.gasto)
 
 ``` 
