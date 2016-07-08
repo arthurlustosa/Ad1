@@ -7,7 +7,6 @@ author: Arthur
 
 installed.packages()
 library(dplyr, warn.conflicts = FALSE)
-library(ggplot)
 library(ggplot2)
 data <- read.csv("/home/arthurls/workspace/ciencia-de-dados-1/dados/ano-atual.csv")
 
