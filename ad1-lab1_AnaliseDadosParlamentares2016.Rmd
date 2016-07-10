@@ -9,7 +9,7 @@ date: 08/07/2016
 #install.packages("ggplot2")
 library(dplyr, warn.conflicts = FALSE)
 library(ggplot2)
-data <- read.csv("/home/arthurls/workspace/lab1-ad1/dados/ano-atual.csv")
+data <- read.csv("/home/arthur/workspace/lab1-ad1/dados/ano-atual.csv")
 
 #vendo os tipos de gastos
 tiposGastos <- unique(data$txtDescricao)
@@ -54,7 +54,7 @@ quant.dep.partidos.histograma <- ggplot(data=quant.dep.partidos, aes(x=reorder(s
 quant.dep.partidos.histograma
 ```
 
-O histograma acima mostra a quantidade de deputados de cada partido.
+O histograma acima mostra a quantidade de deputados de cada partid.
 
 ###Filtrando partidos por quantidade de gastos
 ```{r}
@@ -75,6 +75,37 @@ hist.gastos.por.partido
 ```
 
 O histograma acima mostra a os gastos por partido. Comparando com a quantidade de deputados por partidos vemos que a um gráfico reflete o outro, quanto mais deputados por partido mais gastos o partido tem.
+
+###Gastos totais por partido
+```{r}
+media.gastos.por.partido <- data %>%
+  filter(sgPartido != "NA" & vlrDocumento>0 & vlrLiquido>0) %>%
+  group_by(sgPartido) %>%
+  summarise(media.gastos = sum(vlrDocumento))
+
+hist.media.gastos.por.partido <- ggplot(data=media.gastos.por.partido, aes(x=reorder(sgPartido, media.gastos), y=media.gastos)) +
+  geom_bar(stat="identity") + 
+  coord_flip()
+hist.media.gastos.por.partido
+
+#gastos totais do PMDB 
+gastos.pmdb <- data %>% 
+  filter(sgPartido == "PMDB") %>%
+  group_by(txtDescricao) %>% 
+  summarise(valor.total = mean(vlrDocumento))
+
+#plotando gastos totais do PMDB
+hist.gastos.pmdb <- ggplot(data=gastos.pmdb, aes(x=reorder(txtDescricao, valor.total), y=valor.total)) +
+  geom_bar(stat="identity") +
+  coord_flip()
+
+hist.gastos.pmdb
+
+
+
+```
+
+
 
 ```{r}
 data.positivo <- data %>%
