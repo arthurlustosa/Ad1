@@ -16,8 +16,8 @@ theme_set(theme_bw())
 
 
 ```{r}
-dados <- read.csv("/home/arthur/workspace/lab1-ad1/dados/ano-atual.csv")
-cotas = read.csv("/home/arthur/workspace/lab1-ad1/dados/valor-cota-por-estado.csv", sep = ";", dec = ",")
+dados <- read.csv("/home/arthurls/workspace/lab1-ad1/dados/ano-atual.csv")
+cotas = read.csv("/home/arthurls/workspace/lab1-ad1/dados/valor-cota-por-estado.csv", sep = ";", dec = ",")
 names(cotas) = c("estado", "cota")
 ```
 
@@ -31,31 +31,41 @@ names(cotas) = c("estado", "cota")
 
 
 ```{r}
+
 #filtrando os deputados da paraiba
-#deputados.pb <- c["AGUINALDO RIBEIRO", "BENJAMIN MARANHÃO", "DAMIÃO FELICIANO", "EFRAIM FILHO", "HUGO MOTTA", "LUIZ COUTO", "MANOEL JUNIOR", "MARCONDES GADELHA", "PEDRO CUNHA LIMA", "RÔMULO GOUVEIA", "VENEZIANO VITAL DO RÊGO", "WELLINGTON ROBERTO", "WILSON FILHO"]
+deputados.pb <- c("AGUINALDO RIBEIRO", "BENJAMIN MARANHÃO", "DAMIÃO FELICIANO", "EFRAIM FILHO", "HUGO MOTTA", "LUIZ COUTO", "MANOEL JUNIOR", "MARCONDES GADELHA", "PEDRO CUNHA LIMA", "RÔMULO GOUVEIA", "VENEZIANO VITAL DO RÊGO", "WELLINGTON ROBERTO", "WILSON FILHO")
 
 deputados.pb <- dados %>%
   filter(sgUF == "PB") %>%
   select(txNomeParlamentar, sgPartido) %>%
   distinct()
 
-fornecedores.agnaldo.ribeiro <- dados %>%
-  filter(txNomeParlamentar == "AGUINALDO RIBEIRO") %>%
-  select(txtCNPJCPF, txtFornecedor, vlrDocumento) %>%
-  group_by(txtCNPJCPF, txtFornecedor) %>%
+fornecedores.deputados.pb <- dados %>%
+  filter(txNomeParlamentar %in% deputados.pb ) %>%
+  select(txNomeParlamentar, txtCNPJCPF, txtFornecedor, txtDescricao, vlrDocumento) %>%
+  mutate(txtCNPJCPF = as.factor(txtCNPJCPF)) %>%
+  group_by(txNomeParlamentar, txtCNPJCPF, txtFornecedor, txtDescricao) %>%
   summarise(valor.total = sum(vlrDocumento))
 
+```
 
-fornecedores.hugo.motta <- dados %>%
+```{r, fig.width = 12, fig.height = 7}
+
+fornecedores.hugo.motta <- fornecedores.deputados.pb %>%
   filter(txNomeParlamentar == "HUGO MOTTA") %>%
-  select(txtCNPJCPF, txtFornecedor, vlrDocumento) %>%
-  group_by(txtCNPJCPF, txtFornecedor) %>%
-  summarise(valor.total = sum(vlrDocumento))
+  select(txtCNPJCPF, txtFornecedor, txtDescricao, valor.total) %>%
+  group_by(txtFornecedor, txtDescricao) %>%
+  summarise(valor.total = sum(valor.total))
+  
+  
 
-fornecedores.luiz.couto <- dados %>%
-  filter(txNomeParlamentar == "LUIZ COUTO") %>%
-  select(txtCNPJCPF, txtFornecedor, vlrDocumento) %>%
-  group_by(txtCNPJCPF, txtFornecedor) %>%
-  summarise(valor.total = sum(vlrDocumento))
+ggplot(data=fornecedores.hugo.motta, aes(x=reorder(txtFornecedor, valor.total), y=valor.total)) + 
+  geom_bar(stat="identity") +
+  coord_flip() +
+  labs(title="Fornecedores Deputado Hugo Motta", x="Fornecedor", y="Total")
+
+
+library(plotly)
+plot_ly(data = fornecedores.hugo.motta, x = valor.total, y = txtFornecedor, mode = "markers", color = txtDescricao)
 
 ```
