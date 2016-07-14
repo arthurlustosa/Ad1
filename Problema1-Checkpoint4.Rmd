@@ -1,0 +1,61 @@
+---
+title: "Problema1-Checkpoint4"
+author: "Arthur Lustosa"
+date: "13-07-2016"
+output: html_document
+---
+
+```{r}
+#dependencias = c("dplyr", "ggplot2", "GGally", "readr")
+#install.packages(dependencias)
+library(dplyr, warn.conflicts = FALSE)
+library(ggplot2)
+library(scales)
+theme_set(theme_bw())
+```
+
+
+```{r}
+dados <- read.csv("/home/arthur/workspace/lab1-ad1/dados/ano-atual.csv")
+cotas = read.csv("/home/arthur/workspace/lab1-ad1/dados/valor-cota-por-estado.csv", sep = ";", dec = ",")
+names(cotas) = c("estado", "cota")
+```
+
+
+```{r}
+#(Pergunta 1) Dando um foco no nosso estado (Paraíba), quais fornecedores mais se destacam aqui no nosso estado, essas empresas são realmente daqui? Se sim, qual a relação entre nossos deputados e esses fornecedores?
+#(Pergunta 2) Analisando o gasto dos deputados com passagens aéreas, é esperado que esses gastos tenha uma correlação com o estado de origem do deputado, isso realmente existe? Existem outliers nesses gastos, se sim, como podemos entendê-los?
+#(Pergunta 3 Opcional)Como é a relação dos gastos dos deputados numa distribuição mensal? Quais meses ocorrem mais gastos?
+
+```
+
+
+```{r}
+#filtrando os deputados da paraiba
+#deputados.pb <- c["AGUINALDO RIBEIRO", "BENJAMIN MARANHÃO", "DAMIÃO FELICIANO", "EFRAIM FILHO", "HUGO MOTTA", "LUIZ COUTO", "MANOEL JUNIOR", "MARCONDES GADELHA", "PEDRO CUNHA LIMA", "RÔMULO GOUVEIA", "VENEZIANO VITAL DO RÊGO", "WELLINGTON ROBERTO", "WILSON FILHO"]
+
+deputados.pb <- dados %>%
+  filter(sgUF == "PB") %>%
+  select(txNomeParlamentar, sgPartido) %>%
+  distinct()
+
+fornecedores.agnaldo.ribeiro <- dados %>%
+  filter(txNomeParlamentar == "AGUINALDO RIBEIRO") %>%
+  select(txtCNPJCPF, txtFornecedor, vlrDocumento) %>%
+  group_by(txtCNPJCPF, txtFornecedor) %>%
+  summarise(valor.total = sum(vlrDocumento))
+
+
+fornecedores.hugo.motta <- dados %>%
+  filter(txNomeParlamentar == "HUGO MOTTA") %>%
+  select(txtCNPJCPF, txtFornecedor, vlrDocumento) %>%
+  group_by(txtCNPJCPF, txtFornecedor) %>%
+  summarise(valor.total = sum(vlrDocumento))
+
+fornecedores.luiz.couto <- dados %>%
+  filter(txNomeParlamentar == "LUIZ COUTO") %>%
+  select(txtCNPJCPF, txtFornecedor, vlrDocumento) %>%
+  group_by(txtCNPJCPF, txtFornecedor) %>%
+  summarise(valor.total = sum(vlrDocumento))
+
+```
