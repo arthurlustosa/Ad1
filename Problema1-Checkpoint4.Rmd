@@ -6,26 +6,24 @@ output: html_document
 ---
 
 ```{r}
-#dependencias = c("dplyr", "ggplot2", "GGally", "readr")
-#install.packages(dependencias)
+dependencias = c("dplyr", "ggplot2", "GGally", "readr")
+install.packages(dependencias)
 library(dplyr, warn.conflicts = FALSE)
 library(ggplot2)
 library(scales)
-theme_set(theme_bw())
+
 ```
 
 
 ```{r}
-dados <- read.csv("/home/arthurls/workspace/lab1-ad1/dados/ano-atual.csv")
-cotas = read.csv("/home/arthurls/workspace/lab1-ad1/dados/valor-cota-por-estado.csv", sep = ";", dec = ",")
-names(cotas) = c("estado", "cota")
+dados <- read.csv("dados/ano-atual.csv")
 ```
 
 
 ```{r}
 #(Pergunta 1) Dando um foco no nosso estado (Paraíba), quais fornecedores mais se destacam aqui no nosso estado, essas empresas são realmente daqui? Se sim, qual a relação entre nossos deputados e esses fornecedores?
 #(Pergunta 2) Analisando o gasto dos deputados com passagens aéreas, é esperado que esses gastos tenha uma correlação com o estado de origem do deputado, isso realmente existe? Existem outliers nesses gastos, se sim, como podemos entendê-los?
-#(Pergunta 3 Opcional)Como é a relação dos gastos dos deputados numa distribuição mensal? Quais meses ocorrem mais gastos?
+
 
 ```
 
@@ -64,8 +62,84 @@ ggplot(data=fornecedores.hugo.motta, aes(x=reorder(txtFornecedor, valor.total), 
   coord_flip() +
   labs(title="Fornecedores Deputado Hugo Motta", x="Fornecedor", y="Total")
 
-
+install.packages("plotly")
+devtools::install_github("ropensci/plotly")
 library(plotly)
 plot_ly(data = fornecedores.hugo.motta, x = valor.total, y = txtFornecedor, mode = "markers", color = txtDescricao)
+
+```
+
+```{r, fig.width = 12, fig.height = 7}
+
+cia.aereas <- c("Cia Aérea - TAM", "Avianca", "Azul Linhas Aéreas", "Cia Aérea - AVIANCA", "Cia Aérea - AZUL","Cia Aérea - GOL", "Cia Aérea - TAM", "TAM LINAS AÉREAS S.A", "Tam Linhas Aéreas")
+
+gastos.passagens.aereas <- fornecedores.deputados.pb %>%
+  filter(txtFornecedor %in% cia.aereas) %>%
+  group_by(txNomeParlamentar) %>%
+  summarise(valor.total = sum(valor.total))
+
+
+ggplot(gastos.passagens.aereas, aes(x=reorder(txNomeParlamentar, valor.total), y=valor.total))+
+  geom_bar(stat="identity") +
+  coord_flip() +
+  labs(title = "Ranking gasto com passagens aéreas", x = "Deputado", y = "Valor total")
+
+gastos.passagens.aereas.empresas <- fornecedores.deputados.pb %>%
+  filter(txtFornecedor %in% cia.aereas) %>%
+  group_by(txNomeParlamentar, txtFornecedor) %>%
+  summarise(valor.total = sum(valor.total))
+
+cia.tam <- c("Cia Aérea - TAM", "TAM LINAS AÉREAS S.A", "Tam Linhas Aéreas")
+tam <- gastos.passagens.aereas.empresas %>%
+  filter(txtFornecedor %in% cia.tam)
+
+p <- plot_ly(tam,
+  x = txNomeParlamentar,
+  y = reorder(valor.total, valor.total),
+  name = "Tam",
+  type = "bar")
+p
+
+cia.avianca <- c("Avianca","Cia Aérea - AVIANCA")
+avianca <- gastos.passagens.aereas.empresas %>%
+  filter(txtFornecedor %in% cia.avianca)
+
+p2 <- add_trace(
+  avianca,
+  x = txNomeParlamentar,
+  y = valor.total,
+  name = "Avianca",
+  type = "bar")
+p2
+
+cia.azul <- c("Azul Linhas Aéreas","Cia Aérea - AZUL")
+azul <- gastos.passagens.aereas.empresas %>%
+  filter(txtFornecedor %in% cia.azul)
+
+p3 <- add_trace(
+  azul,
+  x = txNomeParlamentar,
+  y = valor.total,
+  name = "Azul",
+  type = "bar")
+p3
+
+cia.gol <- c("Cia Aérea - GOL")
+gol <- gastos.passagens.aereas.empresas %>%
+  filter(txtFornecedor %in% cia.gol)
+
+p4 <- add_trace(
+  gol,
+  x = txNomeParlamentar,
+  y = valor.total,
+  name = "Gol",
+  type = "bar")
+
+p4
+
+p5 <- layout(p4, barmode = "stack")
+
+p5
+
 
 ```
