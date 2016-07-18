@@ -6,11 +6,14 @@ output: html_document
 ---
 
 ```{r}
-dependencias = c("dplyr", "ggplot2", "GGally", "readr")
-install.packages(dependencias)
+#dependencias = c("dplyr", "ggplot2", "GGally", "readr", "plotly")
+#devtools::install_github("ropensci/plotly")
+#install.packages(dependencias)
+
 library(dplyr, warn.conflicts = FALSE)
 library(ggplot2)
-library(scales)
+library(plotly)
+
 
 ```
 
@@ -29,14 +32,13 @@ dados <- read.csv("dados/ano-atual.csv")
 
 
 ```{r}
-
-#filtrando os deputados da paraiba
-deputados.pb <- c("AGUINALDO RIBEIRO", "BENJAMIN MARANHÃO", "DAMIÃO FELICIANO", "EFRAIM FILHO", "HUGO MOTTA", "LUIZ COUTO", "MANOEL JUNIOR", "MARCONDES GADELHA", "PEDRO CUNHA LIMA", "RÔMULO GOUVEIA", "VENEZIANO VITAL DO RÊGO", "WELLINGTON ROBERTO", "WILSON FILHO")
-
 deputados.pb <- dados %>%
   filter(sgUF == "PB") %>%
   select(txNomeParlamentar, sgPartido) %>%
   distinct()
+
+#filtrando os deputados da paraiba
+deputados.pb <- c("AGUINALDO RIBEIRO", "BENJAMIN MARANHÃO", "DAMIÃO FELICIANO", "EFRAIM FILHO", "HUGO MOTTA", "LUIZ COUTO", "MANOEL JUNIOR", "MARCONDES GADELHA", "PEDRO CUNHA LIMA", "RÔMULO GOUVEIA", "VENEZIANO VITAL DO RÊGO", "WELLINGTON ROBERTO", "WILSON FILHO")
 
 fornecedores.deputados.pb <- dados %>%
   filter(txNomeParlamentar %in% deputados.pb ) %>%
@@ -47,7 +49,7 @@ fornecedores.deputados.pb <- dados %>%
 
 ```
 
-```{r, fig.width = 12, fig.height = 7}
+```{r, autosize=F, width=900, height=600}
 
 fornecedores.hugo.motta <- fornecedores.deputados.pb %>%
   filter(txNomeParlamentar == "HUGO MOTTA") %>%
@@ -62,16 +64,13 @@ ggplot(data=fornecedores.hugo.motta, aes(x=reorder(txtFornecedor, valor.total), 
   coord_flip() +
   labs(title="Fornecedores Deputado Hugo Motta", x="Fornecedor", y="Total")
 
-install.packages("plotly")
-devtools::install_github("ropensci/plotly")
-library(plotly)
+
 plot_ly(data = fornecedores.hugo.motta, x = valor.total, y = txtFornecedor, mode = "markers", color = txtDescricao)
 
 ```
 
-```{r, fig.width = 12, fig.height = 7}
-
-cia.aereas <- c("Cia Aérea - TAM", "Avianca", "Azul Linhas Aéreas", "Cia Aérea - AVIANCA", "Cia Aérea - AZUL","Cia Aérea - GOL", "Cia Aérea - TAM", "TAM LINAS AÉREAS S.A", "Tam Linhas Aéreas")
+```{r, autosize=F, fig.width = 12, fig.height = 7}
+cia.aereas <- c("Cia Aérea - TAM", "Avianca", "Azul Linhas Aéreas", "Cia Aérea - AVIANCA", "Cia Aérea - AZUL","Cia Aérea - GOL", "GOL - LINHAS AÉREAS INTELIGENTES", "GOL - LINHAS AÉREAS S/A", "Cia Aérea - TAM", "TAM LINAS AÉREAS S.A", "Tam Linhas Aéreas")
 
 gastos.passagens.aereas <- fornecedores.deputados.pb %>%
   filter(txtFornecedor %in% cia.aereas) %>%
@@ -79,10 +78,25 @@ gastos.passagens.aereas <- fornecedores.deputados.pb %>%
   summarise(valor.total = sum(valor.total))
 
 
-ggplot(gastos.passagens.aereas, aes(x=reorder(txNomeParlamentar, valor.total), y=valor.total))+
-  geom_bar(stat="identity") +
-  coord_flip() +
-  labs(title = "Ranking gasto com passagens aéreas", x = "Deputado", y = "Valor total")
+
+ranking.gastos <- plot_ly(gastos.passagens.aereas,
+  x = reorder(txNomeParlamentar, valor.total),
+  y = valor.total,
+  name = "Gastos Passagens Aéreas",
+  type = "bar")
+
+ranking.gastos
+
+```
+O ranking acima nos mostra o valor total dos gastos dos deputados com passagens aéreas.
+
+
+```{r, autosize=F, fig.width = 12, fig.height = 7}
+
+```
+Companhias aéreas que mais lucram com os deputados paraibanos.
+
+```{r, autosize=F, fig.width = 12, fig.height = 7}
 
 gastos.passagens.aereas.empresas <- fornecedores.deputados.pb %>%
   filter(txtFornecedor %in% cia.aereas) %>%
@@ -98,7 +112,6 @@ p <- plot_ly(tam,
   y = reorder(valor.total, valor.total),
   name = "Tam",
   type = "bar")
-p
 
 cia.avianca <- c("Avianca","Cia Aérea - AVIANCA")
 avianca <- gastos.passagens.aereas.empresas %>%
@@ -110,7 +123,6 @@ p2 <- add_trace(
   y = valor.total,
   name = "Avianca",
   type = "bar")
-p2
 
 cia.azul <- c("Azul Linhas Aéreas","Cia Aérea - AZUL")
 azul <- gastos.passagens.aereas.empresas %>%
@@ -122,9 +134,8 @@ p3 <- add_trace(
   y = valor.total,
   name = "Azul",
   type = "bar")
-p3
 
-cia.gol <- c("Cia Aérea - GOL")
+cia.gol <- c("Cia Aérea - GOL", "GOL - LINHAS AÉREAS INTELIGENTES", "GOL - LINHAS AÉREAS S/A")
 gol <- gastos.passagens.aereas.empresas %>%
   filter(txtFornecedor %in% cia.gol)
 
@@ -135,11 +146,14 @@ p4 <- add_trace(
   name = "Gol",
   type = "bar")
 
-p4
-
 p5 <- layout(p4, barmode = "stack")
+  
 
 p5
 
+```
+No gráfico acima temos a distribuição dos gastos dos deputados paraibanos de acordo com as companhias aéreas. 
+
+```{r, autosize=F, fig.width = 12, fig.height = 7}
 
 ```
