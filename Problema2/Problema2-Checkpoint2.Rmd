@@ -37,24 +37,33 @@ fornecedores.deputados.pb <- dados %>%
   select(txNomeParlamentar, txtCNPJCPF, txtFornecedor, txtDescricao, vlrDocumento) %>%
   mutate(txtCNPJCPF = as.factor(txtCNPJCPF)) %>%
   group_by(txNomeParlamentar, txtCNPJCPF, txtFornecedor, txtDescricao) %>%
-  summarise(valor.total = sum(vlrDocumento))
+  summarise(valor.total = sum(vlrDocumento)) %>%
+  ungroup()
+
+fornecedores.deputados.pb <- fornecedores.deputados.pb %>%
+  mutate(txtDescricao = as.character(txtDescricao)) %>%
+  mutate(txtDescricao = ifelse(valor.total < 1000, "OUTROS", txtDescricao))
+
+fornecedores.hugo.motta <- fornecedores.hugo.motta %>%
+  mutate(txtFornecedor = as.character(txtFornecedor)) %>%
+  mutate(txtFornecedor = ifelse(valor.total < 1000, "OUTROS", txtFornecedor))
+
+fornecedores.deputados.pb <- fornecedores.deputados.pb %>%
+  group_by(txtFornecedor) %>%
+  summarise(valor.total = sum(valor.total))
 
 fornecedores.deputados.pb <- fornecedores.deputados.pb[ order(-fornecedores.deputados.pb[,5]), ]
-p <- head(p, 50L)
-plot_ly(p,
-  x = reorder(txtFornecedor, valor.total),
-  y = valor.total,
-  name = "Gastos Passagens Aéreas",
-  type = "bar",
-  title = "G")
+
+b <- ggplot(data=fornecedores.deputados.pb, aes(x=reorder(txtFornecedor, valor.total), y=valor.total, fill = txtDescricao, size = valor.total)) + 
+  geom_bar(stat="identity") +
+  facet_wrap(~txNomeParlamentar, scales = "free") +
+  labs(title="Fornecedores Deputados Paraibanos", x="Fornecedor", y="Total")
+
+b
 
 ```
 
 ```{r, autosize=F, width=900, height=600}
-
-library(magrittr)
-library(highcharter)
-
 
 fornecedores.hugo.motta <- fornecedores.deputados.pb %>%
   filter(txNomeParlamentar == "HUGO MOTTA") %>%
@@ -69,6 +78,10 @@ fornecedores.hugo.motta <- fornecedores.hugo.motta %>%
   mutate(txtFornecedor = as.character(txtFornecedor)) %>%
   mutate(txtFornecedor = ifelse(valor.total < 1000, "OUTROS", txtFornecedor))
 
+fornecedores.hugo.motta <- fornecedores.hugo.motta %>%
+  mutate(txtDescricao = as.character(txtDescricao)) %>%
+  mutate(txtDescricao = ifelse(valor.total < 1000, "OUTROS", txtDescricao))
+
 fornecedores.hugo.motta <- fornecedores.hugo.motta[ order(-fornecedores.hugo.motta[,4]), ]
 
 
@@ -77,12 +90,112 @@ ggplot(data=fornecedores.hugo.motta, aes(x=reorder(txtFornecedor, valor.total), 
   coord_flip() +
   labs(title="Fornecedores Deputado Hugo Motta", x="Fornecedor", y="Total")
 
-ggplot(data=fornecedores.hugo.motta, aes(x=reorder(txtFornecedor, valor.total), y=valor.total)) + 
-  geom_jitter(stat="identity") +
+d <- ggplot(data=fornecedores.hugo.motta, aes(x=reorder(txtFornecedor, valor.total), y=valor.total, fill = txtDescricao, size = valor.total)) + 
+  geom_bar(stat="identity") +
   coord_flip() +
   labs(title="Fornecedores Deputado Hugo Motta", x="Fornecedor", y="Total")
 
+d
 
-plot_ly(data = fornecedores.hugo.motta, x = valor.total, y = txtFornecedor, mode = "markers", color = txtDescricao)
+b <- ggplot(data=fornecedores.deputados.pb, aes(x=reorder(txtFornecedor, valor.total), y=valor.total, fill = txtDescricao, size = valor.total)) + 
+  geom_bar(stat="identity") +
+  facet_wrap(~txNomeParlamentar, scales = "free")
+  coord_flip() +
+  labs(title="Fornecedores Deputado Hugo Motta", x="Fornecedor", y="Total")
+
+b
+
+fornecedores.hugo.motta[-1,]
+
+p <- plot_ly(fornecedores.hugo.motta[-1,], 
+             x = valor.total, 
+             y = txtFornecedor, 
+             text = paste("Tipo ", txtDescricao),
+             mode = "markers", 
+             color = txtDescricao,
+             size= valor.total)
+p
+
+
+```
+
+
+```{r, autosize=F, width=900, height=600}
+
+fornecedores.veneziano <- fornecedores.deputados.pb %>%
+  filter(txNomeParlamentar == "VENEZIANO VITAL DO RÊGO") %>%
+  select(txtCNPJCPF, txtFornecedor, txtDescricao, valor.total) %>%
+  group_by(txtCNPJCPF, txtFornecedor, txtDescricao) %>%
+  summarise(valor.total = sum(valor.total)) %>% 
+  ungroup()
+
+fornecedores.veneziano <- fornecedores.veneziano[ order(-fornecedores.veneziano[,4]), ]
+
+fornecedores.veneziano <- fornecedores.veneziano %>%
+  mutate(txtFornecedor = as.character(txtFornecedor)) %>%
+  mutate(txtFornecedor = ifelse(valor.total < 1000, "OUTROS", txtFornecedor))
+
+fornecedores.veneziano <- fornecedores.veneziano %>%
+  mutate(txtDescricao = as.character(txtDescricao)) %>%
+  mutate(txtDescricao = ifelse(valor.total < 1000, "OUTROS", txtDescricao))
+
+fornecedores.veneziano <- fornecedores.veneziano[ order(-fornecedores.veneziano[,4]), ]
+
+
+ggplot(data=fornecedores.hugo.motta, aes(x=reorder(txtFornecedor, valor.total), y=valor.total)) + 
+  geom_bar(stat="identity") +
+  coord_flip() +
+  labs(title="Fornecedores Deputado Hugo Motta", x="Fornecedor", y="Total")
+
+d <- ggplot(data=fornecedores.hugo.motta, aes(x=reorder(txtFornecedor, valor.total), y=valor.total, fill = txtDescricao, size = valor.total)) + 
+  geom_bar(stat="identity") +
+  coord_flip() +
+  labs(title="Fornecedores Deputado Hugo Motta", x="Fornecedor", y="Total")
+
+d
+
+
+
+p <- plot_ly(fornecedores.veneziano, 
+             x = valor.total, 
+             y = txtFornecedor, 
+             text = paste("Tipo ", txtDescricao),
+             mode = "markers", 
+             color = txtDescricao)
+p
+
+fornecedores.dep.pb <- function(nome.deputado) {
+  
+  fornecedores.veneziano <- fornecedores.deputados.pb %>%
+  filter(txNomeParlamentar == nome.deputado) %>%
+  select(txtCNPJCPF, txtFornecedor, txtDescricao, valor.total) %>%
+  group_by(txtCNPJCPF, txtFornecedor, txtDescricao) %>%
+  summarise(valor.total = sum(valor.total)) %>% 
+  ungroup()
+
+fornecedores.veneziano <- fornecedores.veneziano[ order(-fornecedores.veneziano[,4]), ]
+
+fornecedores.veneziano <- fornecedores.veneziano %>%
+  mutate(txtFornecedor = as.character(txtFornecedor)) %>%
+  mutate(txtFornecedor = ifelse(valor.total < 1000, "OUTROS", txtFornecedor))
+
+fornecedores.veneziano <- fornecedores.veneziano %>%
+  mutate(txtDescricao = as.character(txtDescricao)) %>%
+  mutate(txtDescricao = ifelse(valor.total < 1000, "OUTROS", txtDescricao))
+
+fornecedores.veneziano <- fornecedores.veneziano[ order(-fornecedores.veneziano[,4]), ]
+
+p <- plot_ly(fornecedores.veneziano, 
+             x = valor.total, 
+             y = txtFornecedor, 
+             text = paste("Tipo ", txtDescricao),
+             mode = "markers", 
+             color = txtDescricao)
+p
+  
+}
+
+fornecedores.dep.pb("DAMIÃO FELICIANO")
+
 
 ```
