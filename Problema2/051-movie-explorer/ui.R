@@ -1,6 +1,5 @@
 library(shiny)
 library(plotly)
-library(ggplot2movies)  # Needed for the 'movies' data set
 
 shinyUI(fluidPage(
   titlePanel("Gastos Deputados Federais | Jan-Jul 2016"),
