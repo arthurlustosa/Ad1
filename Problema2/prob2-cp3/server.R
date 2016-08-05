@@ -1,9 +1,8 @@
 library(ggplot2)
 library(dplyr)
-library(plotly)
 
-# Set up handles to database tables on app start
-dados <- read.csv("../../dados/ano-atual.csv")
+source("import_data.R")
+import_data()
 
 #Selecionado dados
 dados.deputados <- dados %>%
@@ -14,26 +13,27 @@ deputados.by.estado <- function(nome.estado) {
   dados.deputados %>% filter(sgUF == nome.estado)
 }
 
-
-
 shinyServer(function(input, output) {
-
-  output$trendPlot <- renderPlotly({
+  
+  output$trendPlot <- renderPlot({
+    estado = unlist(strsplit(input$region, " - ")) 
     p = qplot(
         x = txNomeParlamentar, 
         y = vlrDocumento, 
-        data = deputados.by.estado(input$region), 
+        data = deputados.by.estado(estado[2]), 
         colour=sgPartido,
         size=vlrDocumento,
         alpha=0.5,
         xlab = "Nome do deputado",
         ylab = "Valor total") +
-        theme_grey(base_size = 10, base_family = "") +
-        theme(plot.margin = unit(c(0.5, 0.5,0.5, 0.5), "cm"), axis.text.x = element_text(angle = 55, hjust = 1))  +
+        theme_grey(base_size = 12, base_family = "") +
+        theme(plot.margin = unit(c(0.5, 0.5,0.5, 0.5), "cm"), 
+              axis.text.x = element_text(angle = 55, hjust = 1),
+              legend.position = "right")  +
         ggtitle("Gastos dos Parlamentares")
-      
-
     p
 
-  })
+  }
+)
 })
+
