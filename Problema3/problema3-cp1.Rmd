@@ -6,31 +6,70 @@ output: html_document
 
 
 ```{r setup, include=FALSE}
-library(dplyr)
+require(ggplot2, quietly = TRUE)
+require(GGally, quietly = TRUE)
+require(reshape2, quietly = TRUE)
+require(dplyr, quietly = TRUE)
+library(ggfortify)
+library(cluster)
+library(ggdendro)
+
 ```
 
 ```{r setup, include=FALSE}
+
 detalhes_emendas <- read.csv("dados/emendas_detalhes_parlamentar.csv")
 emendas <- read.csv("dados/emendas_area_parlamentar.csv")
 
 ``` 
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r}
 
-```{r cars}
-summary(cars)
+
+
+``` 
+
+```{r}
+#hierarchical
+
+#row.names(emendas)  = emendas$NOME_PARLAMENTAR
+dists = dist(emendas[,2:18], method = "euclidean")
+hc = hclust(dists, method = "ward.D")
+
+plot(hc, cex = .3)
+plot(hc, hang = -1)
+rect.hclust(hc, k=5)
+
+
 ```
 
-## Including Plots
+```{r}
+#PCA
+emendas2 <- log(emendas[,2:18])
+df <- emendas[,2:18]
+autoplot(prcomp(df))
 
-You can also embed plots, for example:
+autoplot(prcomp(df), data = emendas, label = TRUE, loadings = TRUE, frame = TRUE)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+#k-means
+
+km <- kmeans(emendas[,2:18], centers=5, nstart=10)
+km
+
+autoplot(km, data = emendas[,2:18])
+
+autoplot(km, data = emendas[,2:18], frame = TRUE)
+
+
+```
+
+
+
