@@ -51,6 +51,27 @@ row.names(ementas.sumarizadas)  = ementas.sumarizadas$UF_PROPONENTE
 
 ``` 
 
+
+```{r}
+#PCA 
+df <- log(ementas.sumarizadas[,2:18])
+df2 <- ementas.sumarizadas[,2:18]
+autoplot(prcomp(df))
+
+
+autoplot(prcomp(df), data = iris, colour = 'UF_PROPONENTE', loadings = TRUE)
+
+library(devtools)
+install_github('sinhrks/ggfortify')
+library(ggfortify); library(ggplot2)
+data(iris)
+df.pca <- log(ementas.sumarizadas[,2:18])
+autoplot(prcomp(df.pca))
+autoplot(prcomp(df), data = ementas.sumarizadas[,2:18],
+         loadings = TRUE, loadings.colour = 'blue',
+         loadings.label = TRUE, loadings.label.size = 3)
+```
+
 ```{r}
 #hierarchical
 
@@ -68,12 +89,14 @@ rect.hclust(hc, k=5)
 ```{r}
 #k-means
 
-km <- kmeans(emendas.log, centers=5, nstart=10)
+km <- kmeans(log(ementas.sumarizadas[,2:18]), centers=5, nstart=10)
 km
 
 autoplot(km, data = ementas.sumarizadas)
 
 autoplot(km, data = emendas[,2:18], frame = TRUE)
+
+autoplot(kmeans(ementas.sumarizadas[,2:18], 2), data = ementas.sumarizadas)
 
 
 ```
