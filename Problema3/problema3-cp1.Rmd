@@ -4,7 +4,6 @@ output: html_document
 ---
 
 
-
 ```{r setup, include=FALSE}
 require(ggplot2, quietly = TRUE)
 require(GGally, quietly = TRUE)
@@ -16,55 +15,63 @@ library(ggdendro)
 
 ```
 
-```{r setup, include=FALSE}
 
+```{r}
 detalhes_emendas <- read.csv("dados/emendas_detalhes_parlamentar.csv")
 emendas <- read.csv("dados/emendas_area_parlamentar.csv")
 
 ``` 
 
 
+Para este relatório utilizamos os dados das emendas que nossos deputados realizaram. Para entender mais sobre o que é uma emenda, clique aqui. 
+Ao analisar os dados fornecidos encontramos % de NAs nos nomes dos parlamentares, por isso fizemos uma limpeza nos dados. Fizemos um left_join para adicionar o estado correspondente a cada parlamentar, após essa junção encontramos mais um NA que foi removido. Após esses tratamentos ficamos com nosso data frame no formato que queríamos e começamos nossa análise.
+```{r setup, include=FALSE}
 
-```{r}
+emendas.por.estado <- detalhes_emendas %>%
+  select(NOME_PARLAMENTAR, UF_PROPONENTE) %>%
+  filter(NOME_PARLAMENTAR != "NA")
 
 
+ementas.por.estado2 <- emendas.por.estado[!duplicated(emendas.por.estado), ]
+
+ementas.por.estado3 <- left_join(emendas, ementas.por.estado2, by = "NOME_PARLAMENTAR")
+
+#removendo NAs
+ementas.por.estado3 <- ementas.por.estado3 %>%
+  filter(NOME_PARLAMENTAR != "NA")
+
+#sumarizando estados por ementas
+ementas.sumarizadas <- ementas.por.estado3 %>%
+  select(-NOME_PARLAMENTAR) %>%
+  group_by(UF_PROPONENTE)
+
+ementas.sumarizadas <- summarise_each(ementas.sumarizadas[], funs(sum))
+
+row.names(ementas.sumarizadas)  = ementas.sumarizadas$UF_PROPONENTE
 
 ``` 
 
 ```{r}
 #hierarchical
 
-#row.names(emendas)  = emendas$NOME_PARLAMENTAR
-dists = dist(emendas[,2:18], method = "euclidean")
+dists = dist(ementas.sumarizadas[,2:18], method = "euclidean")
 hc = hclust(dists, method = "ward.D")
 
 plot(hc, cex = .3)
 plot(hc, hang = -1)
 rect.hclust(hc, k=5)
 
+``` 
 
-```
-
-```{r}
-#PCA
-emendas2 <- log(emendas[,2:18])
-df <- emendas[,2:18]
-autoplot(prcomp(df))
-
-autoplot(prcomp(df), data = emendas, label = TRUE, loadings = TRUE, frame = TRUE)
-
-
-
-```
 
 
 ```{r}
 #k-means
 
-km <- kmeans(emendas[,2:18], centers=5, nstart=10)
+km <- kmeans(emendas.log, centers=5, nstart=10)
 km
 
-autoplot(km, data = emendas[,2:18])
+autoplot(km, data = ementas.sumarizadas)
 
 autoplot(km, data = emendas[,2:18], frame = TRUE)
 
