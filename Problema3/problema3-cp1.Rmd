@@ -1,5 +1,5 @@
 ---
-title: "problema3-cp1"
+title: "Problema 3, CP1 - Agrupamento"
 output: html_document
 ---
 
@@ -24,82 +24,89 @@ emendas <- read.csv("dados/emendas_area_parlamentar.csv")
 
 
 Para este relatório utilizamos os dados das emendas que nossos deputados realizaram. Para entender mais sobre o que é uma emenda, clique aqui. 
-Ao analisar os dados fornecidos encontramos % de NAs nos nomes dos parlamentares, por isso fizemos uma limpeza nos dados. Fizemos um left_join para adicionar o estado correspondente a cada parlamentar, após essa junção encontramos mais um NA que foi removido. Após esses tratamentos ficamos com nosso data frame no formato que queríamos e começamos nossa análise.
-```{r setup, include=FALSE}
+Ao analisar os dados fornecidos encontramos % de NAs nos nomes dos parlamentares, por isso fizemos uma limpeza nos dados para reduzir essa inconsistência. Para montar o dataset que queríamos aplicamos um left_join para adicionar o UF do estado correspondente a cada parlamentar, após essa junção encontramos um NA que foi removido. Após esses tratamentos ficamos com nosso dataset no formato que queríamos, uma coluna contendo os estados e as demais as emendas parlamentares que foram realizadas nesses estado, sumarizamos os valores de cada emenda para podermos agrupar os estados por emenda e simplificarmos o agrupamento.
+
+```{r}
 
 emendas.por.estado <- detalhes_emendas %>%
   select(NOME_PARLAMENTAR, UF_PROPONENTE) %>%
   filter(NOME_PARLAMENTAR != "NA")
 
 
-ementas.por.estado2 <- emendas.por.estado[!duplicated(emendas.por.estado), ]
+emendas.por.estado2 <- emendas.por.estado[!duplicated(emendas.por.estado), ]
 
-ementas.por.estado3 <- left_join(emendas, ementas.por.estado2, by = "NOME_PARLAMENTAR")
+emendas.por.estado3 <- left_join(emendas, emendas.por.estado2, by = "NOME_PARLAMENTAR")
 
 #removendo NAs
-ementas.por.estado3 <- ementas.por.estado3 %>%
+emendas.por.estado3 <- emendas.por.estado3 %>%
   filter(NOME_PARLAMENTAR != "NA")
 
 #sumarizando estados por ementas
-ementas.sumarizadas <- ementas.por.estado3 %>%
+emendas.sumarizadas <- emendas.por.estado3 %>%
   select(-NOME_PARLAMENTAR) %>%
   group_by(UF_PROPONENTE)
 
-ementas.sumarizadas <- summarise_each(ementas.sumarizadas[], funs(sum))
+emendas.sumarizadas <- summarise_each(emendas.sumarizadas[], funs(sum))
 
-row.names(ementas.sumarizadas)  = ementas.sumarizadas$UF_PROPONENTE
+row.names(emendas.sumarizadas)  = emendas.sumarizadas$UF_PROPONENTE
 
+head(emendas.sumarizadas)
 ``` 
 
+Iniciando nosso trabalho vamos tentar observar a correlação existente entre cada emenda parmalentar e tentar entender um pouco sobre essas variáveis. Para ajustar os valores das emendas aplicamos a escala de log para o entendimento ficar melhor.
 
-```{r}
-#PCA 
-df <- log(ementas.sumarizadas[,2:18])
-df2 <- ementas.sumarizadas[,2:18]
-autoplot(prcomp(df))
+```{r, autosize=F, width=900, height=600}
+#correlacao entre as emendas
+library(corrplot)
+emendas.log <- log(emendas.sumarizadas[,2:18])
+correlacao.emendas <- cor(emendas.log)
+corrplot(correlacao.emendas, type="upper", order="hclust", tl.col="black", tl.srt=45)
 
-
-autoplot(prcomp(df), data = iris, colour = 'UF_PROPONENTE', loadings = TRUE)
-
-library(devtools)
-install_github('sinhrks/ggfortify')
-library(ggfortify); library(ggplot2)
-data(iris)
-df.pca <- log(ementas.sumarizadas[,2:18])
-autoplot(prcomp(df.pca))
-autoplot(prcomp(df), data = ementas.sumarizadas[,2:18],
-         loadings = TRUE, loadings.colour = 'blue',
-         loadings.label = TRUE, loadings.label.size = 3)
 ```
+Vemos que as emendas com maior correlação são:
 
-```{r}
+- Comércio e Lazer com Cultura
+- Direito da cidadania com Segurança Pública
+- Gestão Ambiental com Indústria
+- Saneamento com Urbanismo
+- Assistência Social com Organização Agrária
+
+As demais emendas pussuem uma correlação fraca ou próxima de zero.
+
+
+Passemos a análise propriamente dita, vamos rodar o Hierarchical Clustering para ver os padrões que podem ser encontrados.
+
+##Hierárquico
+```{r, autosize=F, width=900, height=600}
 #hierarchical
 
-dists = dist(ementas.sumarizadas[,2:18], method = "euclidean")
+dists = dist(emendas.sumarizadas[,2:18], method = "euclidean")
 hc = hclust(dists, method = "ward.D")
 
-plot(hc, cex = .3)
-plot(hc, hang = -1)
-rect.hclust(hc, k=5)
+plot(hc, labels = emendas.sumarizadas$UF_PROPONENTE, hang = -1)
 
 ``` 
 
+Analisando esse primeiro dendograma conseguimos observar que os estados podem ser agrupados em 5 grupos. 
 
+```{r, autosize=F, width=900, height=600}
+plot(hc, labels = emendas.sumarizadas$UF_PROPONENTE, hang = -1)
+rect.hclust(hc, k=5)
+```
+Podemos observar os 5 grupos melhor definidos.
 
-```{r}
+##K-means
+O K-means fornece uma alternativa baseada em simulação de agrupamento hierárquico. Ele identifica a maneira "melhor" para agrupar os dados em um número predefinido de clusters. Conseguimos um agrupamento melhor quando formamos 4 clusters.
+```{r, autosize=F, width=900, height=600}
 #k-means
 
-km <- kmeans(log(ementas.sumarizadas[,2:18]), centers=5, nstart=10)
+km <- kmeans(emendas.sumarizadas[,2:18], centers=4, nstart=10)
 km
 
-autoplot(km, data = ementas.sumarizadas)
-
-autoplot(km, data = emendas[,2:18], frame = TRUE)
-
-autoplot(kmeans(ementas.sumarizadas[,2:18], 2), data = ementas.sumarizadas)
+autoplot(km, data = emendas.sumarizadas[,2:18], frame = TRUE)
 
 
 ```
-
+Como podemos ver, com o k-means, temos os clusters com tamanhos não tanto equilibrados equilibrados em termos de tamanho, mas a distribuição dos estados segue o mesmo padrão observado no hierárquico. 
 
 
