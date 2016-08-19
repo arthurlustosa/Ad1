@@ -1,0 +1,109 @@
+---
+title: "problema3-cp2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+require(ggplot2, quietly = TRUE)
+require(GGally, quietly = TRUE)
+require(reshape2, quietly = TRUE)
+require(dplyr, quietly = TRUE)
+library(ggfortify)
+library(cluster)
+library(ggdendro)
+
+```
+
+```{r}
+detalhes_emendas <- read.csv("dados/emendas_detalhes_parlamentar.csv")
+emendas <- read.csv("dados/emendas_area_parlamentar.csv")
+
+```
+
+
+
+```{r}
+#tratando os dados
+emendas.por.estado <- detalhes_emendas %>%
+  select(NOME_PARLAMENTAR, UF_PROPONENTE) %>%
+  filter(NOME_PARLAMENTAR != "NA")
+
+emendas.por.estado2 <- emendas.por.estado[!duplicated(emendas.por.estado), ]
+
+emendas.por.estado3 <- left_join(emendas, emendas.por.estado2, by = "NOME_PARLAMENTAR")
+
+#removendo NAs
+emendas.por.estado3 <- emendas.por.estado3 %>%
+  filter(NOME_PARLAMENTAR != "NA")
+
+#sumarizando estados por ementas
+emendas.sumarizadas <- emendas.por.estado3 %>%
+  select(-NOME_PARLAMENTAR) %>%
+  group_by(UF_PROPONENTE)
+
+emendas.sumarizadas <- summarise_each(emendas.sumarizadas[], funs(sum))
+
+row.names(emendas.sumarizadas)  = emendas.sumarizadas$UF_PROPONENTE
+
+head(emendas.sumarizadas)
+
+```
+
+PC1 temos os estados que em geral mais recebem emendas destindas a defesa nacional d
+
+```{r}
+#PCA
+row.names(emendas.sumarizadas) = make.names(emendas.sumarizadas$UF_PROPONENTE)
+pr.out <- prcomp(emendas.sumarizadas[,2:18], scale=TRUE)
+
+
+biplot(pr.out)
+
+autoplot(pr.out, label = TRUE)
+
+autoplot(pr.out, label = TRUE, label.size = 3, shape = FALSE, 
+         loadings = TRUE, loadings.colour = 'blue',
+         loadings.label = TRUE, loadings.label.size = 3)
+
+
+plot_pve(pr.out)
+
+# Porcentagem da variância explicada: 
+plot_pve <- function(prout){
+  pr.var <- pr.out$sdev^2
+  pve <- pr.var / sum(pr.var)
+  df = data.frame(x = 1:NROW(pve), y = cumsum(pve))
+  ggplot(df, aes(x = x, y = y)) + 
+    geom_point(size = 3) + 
+    geom_line() + 
+    labs(x='Principal Component', y = 'Cumuative Proportion of Variance Explained')
+}
+
+plot_pve(pr.out)
+
+```
+
+```{r}
+#t-SNE
+
+require(Rtsne)
+iris2 = iris %>% filter(!duplicated(iris))
+tsne.out = Rtsne(select(iris2, -Species), 
+                 verbose = TRUE)
+
+df = as.data.frame(tsne.out$Y)
+df$Species = iris2$Species
+
+ggplot(df, aes(x = V1, y = V2, label = Species)) + 
+  geom_point(alpha = 0.8, size = 3, color = "tomato") 
+
+ggplot(df, aes(x = V1, y = V2, label = Species)) + 
+  geom_point(alpha = 0.2, size = 3, color = "tomato") + 
+  geom_text(alpha = .7, size = 4, hjust = -.2)
+
+```
+
+```
+
