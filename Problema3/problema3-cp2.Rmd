@@ -56,16 +56,17 @@ PC1 temos os estados que em geral mais recebem emendas destindas a defesa nacion
 ```{r}
 #PCA
 row.names(emendas.sumarizadas) = make.names(emendas.sumarizadas$UF_PROPONENTE)
-pr.out <- prcomp(emendas.sumarizadas[,2:18], scale=TRUE)
 
+emendas2 <- select(emendas.sumarizadas, -UF_PROPONENTE)
+pr.out <- prcomp(emendas2, scale=TRUE)
 
 biplot(pr.out)
 
-autoplot(pr.out, label = TRUE)
+autoplot(pr.out, labels=pr.out$UF_PROPONENTE, label=T)
 
-autoplot(pr.out, label = TRUE, label.size = 3, shape = FALSE, 
+autoplot(pr.out, label = TRUE, label.size = 4, shape = FALSE, 
          loadings = TRUE, loadings.colour = 'blue',
-         loadings.label = TRUE, loadings.label.size = 3)
+         loadings.label = TRUE, loadings.label.size = 4)
 
 
 plot_pve(pr.out)
@@ -89,8 +90,8 @@ plot_pve(pr.out)
 #t-SNE
 
 require(Rtsne)
-iris2 = iris %>% filter(!duplicated(iris))
-tsne.out = Rtsne(select(iris2, -Species), 
+emendas2 = emendas.sumarizadas %>% filter(!duplicated(emendas.sumarizadas))
+tsne.out = Rtsne(select(emendas2, -UF_PROPONENTE), 
                  verbose = TRUE)
 
 df = as.data.frame(tsne.out$Y)
@@ -102,6 +103,10 @@ ggplot(df, aes(x = V1, y = V2, label = Species)) +
 ggplot(df, aes(x = V1, y = V2, label = Species)) + 
   geom_point(alpha = 0.2, size = 3, color = "tomato") + 
   geom_text(alpha = .7, size = 4, hjust = -.2)
+
+
+
+
 
 ```
 
