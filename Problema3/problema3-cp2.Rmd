@@ -86,23 +86,35 @@ plot_pve(pr.out)
 
 ```
 
+Ao realizarmos as análises aplicando o t-SNE observamos o surgimento de três clusters que reunem algumas regioes. 
+
 ```{r}
 #t-SNE
 
 require(Rtsne)
 emendas2 = emendas.sumarizadas %>% filter(!duplicated(emendas.sumarizadas))
-tsne.out = Rtsne(select(emendas2, -UF_PROPONENTE), 
-                 verbose = TRUE)
+emendas2 = select(emendas2, -UF_PROPONENTE)
+tsne.out = Rtsne(emendas2, perplexity = 5)
 
 df = as.data.frame(tsne.out$Y)
-df$Species = iris2$Species
+df$UF_PROPONENTE = emendas.sumarizadas$UF_PROPONENTE
 
-ggplot(df, aes(x = V1, y = V2, label = Species)) + 
+ggplot(df, aes(x = V1, y = V2, label = UF_PROPONENTE)) + 
   geom_point(alpha = 0.8, size = 3, color = "tomato") 
 
-ggplot(df, aes(x = V1, y = V2, label = Species)) + 
+ggplot(df, aes(x = V1, y = V2, label = UF_PROPONENTE)) + 
   geom_point(alpha = 0.2, size = 3, color = "tomato") + 
   geom_text(alpha = .7, size = 4, hjust = -.2)
+
+
+
+biplot(tsne.out)
+
+autoplot(tsne.out,  label=T)
+
+autoplot(tsne.out, label = TRUE, label.size = 4, shape = FALSE, 
+         loadings = TRUE, loadings.colour = 'blue',
+         loadings.label = TRUE, loadings.label.size = 4)
 
 
 
