@@ -1,5 +1,5 @@
 ---
-title: "problema3-cp2"
+title: "Problema 3 - Checkpoint 3: Redução de dimensionalidade"
 output: html_document
 ---
 
@@ -16,15 +16,16 @@ library(ggdendro)
 
 ```
 
-```{r}
+Nessa etapa do problema 3, continuamos nossa análise utlizando os dados sobre verbas alocadas por deputados para municípos, estados, fundações através de emendas parlamentares.
+
+```{r, message=FALSE, warning=FALSE}
 detalhes_emendas <- read.csv("dados/emendas_detalhes_parlamentar.csv")
 emendas <- read.csv("dados/emendas_area_parlamentar.csv")
-
 ```
 
+Na tentativa de sumarizar melhor os dados, agrupamos os parlamentares de acordo com seu referido estado e sumarizamos os valores de cada tipo de emenda para o estado corrente. Assim, mudamos o escopo dos dados, de emendas por parlamentar para emendas por estado. Na análise inicial dos dados tivemos alguns problemas em relação aos nomes de alguns parlamentares que estavam nulos, retiramos essas linhas para nossa exploração ficar mais íntegra. Após sumarizar as emendas por estados nosso dataset ficou da seguinte forma:
 
-
-```{r}
+```{r, message=FALSE, warning=FALSE, autosize=T, width=900, height=600}
 #tratando os dados
 emendas.por.estado <- detalhes_emendas %>%
   select(NOME_PARLAMENTAR, UF_PROPONENTE) %>%
@@ -47,29 +48,20 @@ emendas.sumarizadas <- summarise_each(emendas.sumarizadas[], funs(sum))
 
 row.names(emendas.sumarizadas)  = emendas.sumarizadas$UF_PROPONENTE
 
-head(emendas.sumarizadas)
-
 ```
 
-PC1 temos os estados que em geral mais recebem emendas destindas a defesa nacional d
+#PCA
 
-```{r}
+Iniciando a análise propriamente dita. Vamos rodar o PCA nos dados númericos com scale=TRUE para normalizar os mesmos, evitanto o impacto de discrepâncias dos valores nas variâncias.
+
+```{r, message=FALSE, warning=FALSE, autosize=T, width=900, height=600}
 #PCA
 row.names(emendas.sumarizadas) = make.names(emendas.sumarizadas$UF_PROPONENTE)
 
 emendas2 <- select(emendas.sumarizadas, -UF_PROPONENTE)
 pr.out <- prcomp(emendas2, scale=TRUE)
 
-biplot(pr.out)
-
-autoplot(pr.out, labels=pr.out$UF_PROPONENTE, label=T)
-
-autoplot(pr.out, label = TRUE, label.size = 4, shape = FALSE, 
-         loadings = TRUE, loadings.colour = 'blue',
-         loadings.label = TRUE, loadings.label.size = 4)
-
-
-plot_pve(pr.out)
+pr.out
 
 # Porcentagem da variância explicada: 
 plot_pve <- function(prout){
@@ -84,23 +76,49 @@ plot_pve <- function(prout){
 
 plot_pve(pr.out)
 
+autoplot(pr.out, labels=pr.out$UF_PROPONENTE, label=T, main="Estados nas duas primeiras dimensões do PCA")
+
 ```
+Para gerar o gráfico acima, utilizamos a função plot_pve, que mostra a porcentagem da variância explicada através do compomentes gerados (essa função foi disponibilizada pelo professor). Analisando o gráfico gerado observamos que os dois primeiros componentes explicam cerca de 64% da variância, e que no segundo gráfico mostrado PC1 e PC2, a maioria dos estados se encontram aglomerados em algumas regiões, temos alguns outliers como por exemplo o estado de Pernambuco, que explicaremos mais adiante.
 
-Ao realizarmos as análises aplicando o t-SNE observamos o surgimento de três clusters que reunem algumas regioes. 
+```{r, message=FALSE, warning=FALSE, autosize=T, width=900, height=600}
+#PCA
 
-```{r}
+emendas2 <- select(emendas.sumarizadas, -UF_PROPONENTE)
+pr.out <- prcomp(emendas2, scale=TRUE)
+
+biplot(pr.out, main = "Variáveis e Indivíduos nas Dimensões")
+
+autoplot(pr.out, label = TRUE, label.size = 4, shape = FALSE, 
+         loadings = TRUE, loadings.colour = 'blue',
+         loadings.label = TRUE, loadings.label.size = 4)
+
+
+```
+Ao aplicarmos os vetores de direcionamento com sua respectiva variável (nesse caso, o tipo da emenda), conseguimos ver melhor o comportamento de cada estado a partir dos dois primeiros componentes. Observando o PC1 vemos que os estados se comportam de duas formas distintas, existem aqueles que recebem mais emendas do tipo defesa nacional e os que recebem dos demais tipos. No grupo de estados que mais recebem mais emendas do tipo defesa nacional encontramos os estados que fazem fronteira com outros paises (Amapá, Roraina, Amazonas, Acre, Rondônia, Mato Grosso, Mato Grosso do Sul) e alguns da costa leste (Rio Grande do Norte, Paraíba, Alagoas, Sergipe, Espírito Santo), interessante que no meio desse grupo encontramos o Distrito Federal. Seguindo a lógica dos estados costeiros, era de se esperar que a Bahia (maior extensão de litoral) estivesse presente nesse grupo, porém não está. 
+
+Temos dois outliers interessantes de se analisar, o estado de Pernambuco e de São Paulo. Observando o gráfico exibido acima identificamos o estado de Pernambuco bem acima dos outros (tendo como orientação o PC2), pela obsevação feita, vemos que esse estado recebe mais emendas do tipo saúde, fomos ver os dados e realmente o estado de Pernambuco recebeu mais verbas em saúde do que os outros, num total de 144 milhões de reais. Outro ponto interessante é que os estados (nesse caso, Pernambuco) recebem mais verbas do tipo Gestão Ambiental e Indústria, tipos com propósitos distintos. Sobre o estado de São Paulo, os maiores investimentos são em Urbanismo, Saneamento, Lazer que ficam opostos aos de Pernambuco. 
+
+
+#t-SNE
+
+Ao realizarmos as análises aplicando o t-SNE observamos o surgimento de três clusters bem definidos, porém para tentarmos chegar a uma conclusão mais sólida sobre os resultados obtivos, rodamos o nosso experimento 5 vezes para comprovar se os estados estariam realmente se agrupando em três grupos. 
+
+Na primeira rodada, conseguimos (de forma leve) o surgimento de três grupos distintos. Grupo 1: RO, RR, AC, AP, DF, MA e AL. Nesse grupo obervamos a presença de muitos dos estados da região norte do país, porém com a presença do estado de Alagoas. Grupo 2: PE, CE, RN, PB, AM, TO PA, GO, ES, PA, MT. Esse segundo grupo temos uma mescla dos estados do nordeste com alguns do norte e centro-oeste. Grupo 3: SP, RS, MG, PR, SC, BA, MS, PI, RJ. O terceiro grupo é composto por a maioria dos estados do sul e sudeste com a presença de alguns estados do nordeste. 
+
+#Experimento 1
+```{r, message=FALSE, warning=FALSE, autosize=T, width=900, height=600}
 #t-SNE
 
 require(Rtsne)
 emendas2 = emendas.sumarizadas %>% filter(!duplicated(emendas.sumarizadas))
 emendas2 = select(emendas2, -UF_PROPONENTE)
+
+#treino 1
 tsne.out = Rtsne(emendas2, perplexity = 5)
 
 df = as.data.frame(tsne.out$Y)
 df$UF_PROPONENTE = emendas.sumarizadas$UF_PROPONENTE
-
-ggplot(df, aes(x = V1, y = V2, label = UF_PROPONENTE)) + 
-  geom_point(alpha = 0.8, size = 3, color = "tomato") 
 
 ggplot(df, aes(x = V1, y = V2, label = UF_PROPONENTE)) + 
   geom_point(alpha = 0.2, size = 3, color = "tomato") + 
@@ -108,19 +126,76 @@ ggplot(df, aes(x = V1, y = V2, label = UF_PROPONENTE)) +
 
 
 
-biplot(tsne.out)
-
-autoplot(tsne.out,  label=T)
-
-autoplot(tsne.out, label = TRUE, label.size = 4, shape = FALSE, 
-         loadings = TRUE, loadings.colour = 'blue',
-         loadings.label = TRUE, loadings.label.size = 4)
-
-
-
-
-
 ```
 
-```
+#Experimento 2
+```{r, message=FALSE, warning=FALSE, autosize=T, width=900, height=600}
+#t-SNE
 
+#treino 2
+tsne.out = Rtsne(emendas2, perplexity = 5)
+
+df = as.data.frame(tsne.out$Y)
+df$UF_PROPONENTE = emendas.sumarizadas$UF_PROPONENTE
+
+ggplot(df, aes(x = V1, y = V2, label = UF_PROPONENTE)) + 
+  geom_point(alpha = 0.2, size = 3, color = "tomato") + 
+  geom_text(alpha = .7, size = 4, hjust = -.2)
+
+```
+Na seunda rodada podemos observar que o mesmo padrão visto na etapa passada. 
+
+#Experimento 3
+```{r, message=FALSE, warning=FALSE, autosize=T, width=900, height=600}
+#t-SNE
+
+#treino 3
+tsne.out = Rtsne(emendas2, perplexity = 5)
+
+df = as.data.frame(tsne.out$Y)
+df$UF_PROPONENTE = emendas.sumarizadas$UF_PROPONENTE
+
+ggplot(df, aes(x = V1, y = V2, label = UF_PROPONENTE)) + 
+  geom_point(alpha = 0.2, size = 3, color = "tomato") + 
+  geom_text(alpha = .7, size = 4, hjust = -.2)
+
+```
+Os mesmos resultas continuam sendo observados.
+ 
+#Experimento 4
+```{r, message=FALSE, warning=FALSE, autosize=T, width=900, height=600}
+#t-SNE
+
+#treino 4
+tsne.out = Rtsne(emendas2, perplexity = 5)
+
+df = as.data.frame(tsne.out$Y)
+df$UF_PROPONENTE = emendas.sumarizadas$UF_PROPONENTE
+
+ggplot(df, aes(x = V1, y = V2, label = UF_PROPONENTE)) + 
+  geom_point(alpha = 0.2, size = 3, color = "tomato") + 
+  geom_text(alpha = .7, size = 4, hjust = -.2)
+
+```
+Dessa vez os estados ficaram mais espalhados pelo gráfico, porém conseguimos observar que os estados que pertenciam aos grupos 1, 2, 3 continuam próximos uns dos outros. 
+
+#Experimento 5:
+```{r, message=FALSE, warning=FALSE, autosize=T, width=900, height=600}
+#t-SNE
+
+#treino 5
+tsne.out = Rtsne(emendas2, perplexity = 5)
+
+df = as.data.frame(tsne.out$Y)
+df$UF_PROPONENTE = emendas.sumarizadas$UF_PROPONENTE
+
+ggplot(df, aes(x = V1, y = V2, label = UF_PROPONENTE)) + 
+  geom_point(alpha = 0.2, size = 3, color = "tomato") + 
+  geom_text(alpha = .7, size = 4, hjust = -.2)
+
+```
+Na última rodada do nosso experimento chegamos a conclusão que os grupos observados desde a primeira etapa continuam aparecendo sem muitas alterações.
+
+Ao observar os 5 últimos gráficos chegamos a conclusão que os estados brasileiros se agrupam em 3 clusters de acordo as emendas que são destinadas a cada um deles. Sobre essas regiões, percebemos que temos um grupo onde temos a presença da maioria dos estados do norte, e alguns do nordeste. No grupo 2 temos o inverso, a maioria dos componentes do grupo são do norteste, mas temos a presença de alguns do norte. O último grupo é composto pelos estados do sul/sudeste  com a prensença de alguns não vizinhos. 
+
+A utilização do PCA e do T-SNE mostrou resultados muito interessantes, tanto na divergência de alguns tipos de emendas, como na convergência de outras. Tivemos conclusões que eram de ser esperadas, como a dos estados que mais recebem em defesa nacional que são os estados das fronteiras e os do litoral. Foi interessante observar que Gestão Ambiental e Indústria estão bem relacionados, já Gestão Ambiental e Agricultura são opostos.  
