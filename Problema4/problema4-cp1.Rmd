@@ -6,27 +6,56 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
-movie = read.csv("dados/ml-latest-small/movies.csv", stringsAsFactors = F)
+movies = read.csv("dados/ml-latest-small/movies.csv", stringsAsFactors = F)
 rating = read.csv("dados/ml-latest-small/ratings.csv", stringsAsFactors = F)
 tags = read.csv("dados/ml-latest-small/tags.csv", stringsAsFactors = F)
 links = read.csv("dados/ml-latest-small/links.csv", stringsAsFactors = F)
 ```
 
 ## Conhecendo os Dados
-Vamos dar uma olhada nos dados fornecidos para essa análise. Os dados são referentes a avaliações de filmes, feitas por usuários, coletadas aleatóriamente pelo Movielens ["https://movielens.org/"] disponibilizados no site ["http://grouplens.org/datasets/movielens/latest/"]. O conjunto de dados escolhido é o de menor volume, cerca de 10.000 filmes com 100.000 avaliações.
+Os dados são referentes a avaliações de filmes, feitas por usuários, coletadas aleatóriamente pelo Movielens ["https://movielens.org/"] disponibilizados no site ["http://grouplens.org/datasets/movielens/latest/"]. O conjunto de dados escolhido é o de menor volume, cerca de 10.000 filmes com 100.000 avaliações. Os dados são de 668 usuários entre abril 1996 ate janeiro de 2016.
 
 ```{r cars}
-count.genres <- movie %>%
-  select(genres) %>%
-  distinct()
+head(movies)
+
+summary(rating$rating)
+
 
 genres <- c("Action", "Adventure", "Animation", "Children's", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film-Noir", "Horror", "Musical", "Mystery", "Romance", "Sci-Fi", "Thriller", "War", "Western", "(no genres listed)")
 
 ```
+Vamos dar uma olhada nos dados fornecidos para essa análise, no dataset movies temos as informações: movieId, title e genre. No dataset rating, temos as avaliações dos filmes, podemos ver de forma resumida essas avaliações. 
+Para melhor entendermos os dados, agrupamos os dataset anteriores em um único, contendo: movieId, title, genre, média de avaliações e número de usuários que avaliaram aquele filme.
+```{r}
+data.movies <- rating %>%
+  group_by(movieId) %>%
+  mutate(mean.movies = mean(rating)) %>%
+  mutate(n.users = n())
+  
+data.movies <- data.movies %>%
+  select(movieId, mean.movies, n.users)
 
-## Including Plots
+data.movies <- unique(data.movies)
+  
+data.movies <- merge(movies, data.movies, by = "movieId")
 
-You can also embed plots, for example:
+head(data.movies)
+
+```
+
+## Pergunta 1
+Escolha uma trilogia (ou uma n-logia com n > 3) e avalie para qual dos episódios da trilogia há melhor avaliação e para qual há mais variação nas notas atribuídas ao filme. (Exemplos: Poderoso Chefão, Star Wars, Matrix, etc.)
+
+Quadrilogia Hannibal: Silence of the Lambs, The (1991), Hannibal (2001), Red Dragon (2002), Hannibal Rising (2007)
+```{r pressure, echo=FALSE}
+movies.han = c("Silence of the Lambs, The (1991)", "Hannibal (2001)", "Red Dragon (2002)", "Hannibal Rising (2007)")
+
+hannibal.movies <- data.movies %>%
+  filter(title %in% movies.han)
+```
+
+## Pergunta 2
+Normalmente os filmes têm vários gêneros. Existe uma relação entre em quantos gêneros os filmes se encaixam e a avaliação que os filmes recebem? Mais especificamente: se consideramos a os filmes com 1, 2, 3 ... gêneros, existe alguma quantidade de gêneros num mesmo filme que em geral recebe avaliações melhores? Caso exista, estime a diferença entre essa combinação e filmes com apenas um gênero. (Repare que você terá que escolher que medida você comparará: média, mediana, etc.)
 
 ```{r pressure, echo=FALSE}
 
