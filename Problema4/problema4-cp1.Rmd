@@ -6,10 +6,12 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
+library(ggplot2)
 movies = read.csv("dados/ml-latest-small/movies.csv", stringsAsFactors = F)
 rating = read.csv("dados/ml-latest-small/ratings.csv", stringsAsFactors = F)
 tags = read.csv("dados/ml-latest-small/tags.csv", stringsAsFactors = F)
 links = read.csv("dados/ml-latest-small/links.csv", stringsAsFactors = F)
+movies.genres = read.csv("dados/movie-genre.csv", stringsAsFactors = F)
 ```
 
 ## Conhecendo os Dados
@@ -20,44 +22,116 @@ head(movies)
 
 summary(rating$rating)
 
-
 genres <- c("Action", "Adventure", "Animation", "Children's", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film-Noir", "Horror", "Musical", "Mystery", "Romance", "Sci-Fi", "Thriller", "War", "Western", "(no genres listed)")
 
 ```
 Vamos dar uma olhada nos dados fornecidos para essa análise, no dataset movies temos as informações: movieId, title e genre. No dataset rating, temos as avaliações dos filmes, podemos ver de forma resumida essas avaliações. 
 Para melhor entendermos os dados, agrupamos os dataset anteriores em um único, contendo: movieId, title, genre, média de avaliações e número de usuários que avaliaram aquele filme.
 ```{r}
-data.movies <- rating %>%
-  group_by(movieId) %>%
-  mutate(mean.movies = mean(rating)) %>%
-  mutate(n.users = n())
-  
-data.movies <- data.movies %>%
-  select(movieId, mean.movies, n.users)
-
-data.movies <- unique(data.movies)
-  
-data.movies <- merge(movies, data.movies, by = "movieId")
-
-head(data.movies)
-
+#merge dos dataframes movies e rating
+data.movies <- merge(movies, rating, by = "movieId")
 ```
 
 ## Pergunta 1
 Escolha uma trilogia (ou uma n-logia com n > 3) e avalie para qual dos episódios da trilogia há melhor avaliação e para qual há mais variação nas notas atribuídas ao filme. (Exemplos: Poderoso Chefão, Star Wars, Matrix, etc.)
 
-Quadrilogia Hannibal: Silence of the Lambs, The (1991), Hannibal (2001), Red Dragon (2002), Hannibal Rising (2007)
-```{r pressure, echo=FALSE}
-movies.han = c("Silence of the Lambs, The (1991)", "Hannibal (2001)", "Red Dragon (2002)", "Hannibal Rising (2007)")
+A trilogia escolhida foi a do filme Matrix. Vejamos quantas avaliações tem cada filme.
 
-hannibal.movies <- data.movies %>%
-  filter(title %in% movies.han)
+```{r pressure, echo=FALSE}
+#vetor com os ids dos filmes matrix
+movies.matrix.ids = c(2571, 6365, 6934)
+
+#dataset com todos os filmes de matrix
+matrix.movies <- data.movies %>%
+  filter(movieId %in% movies.matrix.ids )
+
+#datasets separados por filmes
+matrix1 <- data.movies %>% filter(movieId == 2571)
+matrix2 <- data.movies %>% filter(movieId == 6365)
+matrix3 <- data.movies %>% filter(movieId == 6934)
+
+
+p <- ggplot(matrix.movies, aes(rating)) + geom_bar()
+p + facet_grid(. ~ title, scales = c("free_y"))
+
 ```
+
+
+Devido aos valores das avaliações possuirem extremos, optamos por utilizar o intervalo de confiança feito com a mediana dos valores. 
+```{r}
+# install.packages("resample")
+library(resample)
+# concorrente: boot
+
+bootstrap.mediana.matrix1 = bootstrap(matrix1$rating, median, R = 1000)
+mediana.matrix1 = CI.percentile(bootstrap.mediana.matrix1, probs = c(.025, .975))
+
+bootstrap.mediana.matrix2 = bootstrap(matrix2$rating, median, R = 1000)
+mediana.matrix2 = CI.percentile(bootstrap.mediana.matrix2, probs = c(.025, .975))
+
+bootstrap.mediana.matrix3 = bootstrap(matrix3$rating, median, R = 1000)
+mediana.matrix3 = CI.percentile(bootstrap.mediana.matrix3, probs = c(.025, .975))
+
+
+medianas.matrix <- data.frame(
+  rbind(
+    c("Matrix I", mediana.matrix1),
+    c("Matrix II", mediana.matrix2),
+    c("Matrix III", mediana.matrix3)
+  )
+)
+
+names(medianas.matrix) = c("titulo", "limite.inferior", "limite.superior")
+
+ggplot(medianas.matrix, aes(x = titulo, ymin = limite.inferior, ymax = limite.superior)) +
+  geom_errorbar(width = .2) +
+  ggtitle("Intervalo de confiança da estimativa \nda Medianas das notas dos filmes Matrix")
+
+```
+Observando os resultados obtidos podemos afirmar que o primeiro filme de Matrix é realmente melhor que os outros, de acordo com as avaliações. Comparando os outros dois, vemos que o resultado é básicamente o mesmo, os filmes Matrix Reloaded e  Matrix Revolutions estão na mesma colocação segundo as avaliações. Sobre essa igualdade dos resultados dos dois últimos filmes, fizemos a diferença entre as medianas e o resultado observado foi o mesmo. 
+Vamos observar as variações entre as notas dos filmes:
+
+```{r}
+g <- ggplot(matrix.movies, aes(x=rating, y=userId)) + geom_point()
+g + facet_grid(. ~ title, scales = c("free_y"))
+
+```
+Analisando as notas atribuidas pelos usuários, podemos concluir que as observações feitas antes, condizem com a realidade. O primeiro filme é bem considerado como o melhor e os outros dois tem as avaliações bem parecidas. 
+
 
 ## Pergunta 2
 Normalmente os filmes têm vários gêneros. Existe uma relação entre em quantos gêneros os filmes se encaixam e a avaliação que os filmes recebem? Mais especificamente: se consideramos a os filmes com 1, 2, 3 ... gêneros, existe alguma quantidade de gêneros num mesmo filme que em geral recebe avaliações melhores? Caso exista, estime a diferença entre essa combinação e filmes com apenas um gênero. (Repare que você terá que escolher que medida você comparará: média, mediana, etc.)
 
 ```{r pressure, echo=FALSE}
+
+movie.genre <- read.csv("dados/movie-genre.csv")
+genre.median <- data.frame(movieId=numeric(0), n=numeric(0), mediana=numeric(0))
+
+
+for(id in 1:149532){
+ #se existir filme com id n
+ if(nrow( subset(movie.genre, movieId == id) ) > 0){
+   
+   id <- as.numeric(id)
+   avaliacoes1 <- subset(rating, movieId == id)
+   #se esse filme possui avaliacoes
+   if(nrow(avaliacoes1) > 0){
+     
+     # se filme possui um gênero e é no genre
+     if(length(movie.genre$genre[movie.genre$movieId==id]) == 1 & movie.genre$genre[movie.genre$movieId==id]  == "(no genres listed)"){
+       v.n <- 0
+     }
+     else{
+         # n é quantidade de gêneros
+         v.n <- as.numeric(sum(movie.genre$movieId == id))
+     }
+     # calcula mediana de avaliaçÕes do filme
+     v.mediana <- median(avaliacoes1$rating)
+     # adiciona na tabela
+     genre.median <- rbind(genre.median, data.frame(movieId = id, n = v.n, mediana = v.mediana))
+   }
+ }
+}
 
 ```
 
