@@ -7,37 +7,36 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(ggplot2)
+```
+
+## Conhecendo os Dados
+Os dados são referentes a avaliações de filmes, feitas por usuários, coletadas aleatóriamente pelo [Movielens](https://movielens.org/) disponibilizados no [site](http://grouplens.org/datasets/movielens/latest/). O conjunto de dados escolhido é o de menor volume, cerca de 10.000 filmes com 100.000 avaliações. Os dados são de 668 usuários entre abril 1996 ate janeiro de 2016.
+
+```{r warning=F, message=F}
 movies = read.csv("dados/ml-latest-small/movies.csv", stringsAsFactors = F)
 rating = read.csv("dados/ml-latest-small/ratings.csv", stringsAsFactors = F)
 tags = read.csv("dados/ml-latest-small/tags.csv", stringsAsFactors = F)
 links = read.csv("dados/ml-latest-small/links.csv", stringsAsFactors = F)
-movies.genres = read.csv("dados/movie-genre.csv", stringsAsFactors = F)
-```
+movie.genre = read.csv("dados/movie-genre.csv", stringsAsFactors = F)
 
-## Conhecendo os Dados
-Os dados são referentes a avaliações de filmes, feitas por usuários, coletadas aleatóriamente pelo Movielens ["https://movielens.org/"] disponibilizados no site ["http://grouplens.org/datasets/movielens/latest/"]. O conjunto de dados escolhido é o de menor volume, cerca de 10.000 filmes com 100.000 avaliações. Os dados são de 668 usuários entre abril 1996 ate janeiro de 2016.
-
-```{r cars}
 head(movies)
 
 summary(rating$rating)
 
-genres <- c("Action", "Adventure", "Animation", "Children's", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Film-Noir", "Horror", "Musical", "Mystery", "Romance", "Sci-Fi", "Thriller", "War", "Western", "(no genres listed)")
-
 ```
 Vamos dar uma olhada nos dados fornecidos para essa análise, no dataset movies temos as informações: movieId, title e genre. No dataset rating, temos as avaliações dos filmes, podemos ver de forma resumida essas avaliações. 
 Para melhor entendermos os dados, agrupamos os dataset anteriores em um único, contendo: movieId, title, genre, média de avaliações e número de usuários que avaliaram aquele filme.
-```{r}
+```{r warning=F, message=F}
 #merge dos dataframes movies e rating
 data.movies <- merge(movies, rating, by = "movieId")
 ```
 
-## Pergunta 1
+## Parte 1
 Escolha uma trilogia (ou uma n-logia com n > 3) e avalie para qual dos episódios da trilogia há melhor avaliação e para qual há mais variação nas notas atribuídas ao filme. (Exemplos: Poderoso Chefão, Star Wars, Matrix, etc.)
 
 A trilogia escolhida foi a do filme Matrix. Vejamos quantas avaliações tem cada filme.
 
-```{r pressure, echo=FALSE}
+```{r warning=F, message=F}
 #vetor com os ids dos filmes matrix
 movies.matrix.ids = c(2571, 6365, 6934)
 
@@ -58,7 +57,7 @@ p + facet_grid(. ~ title, scales = c("free_y"))
 
 
 Devido aos valores das avaliações possuirem extremos, optamos por utilizar o intervalo de confiança feito com a mediana dos valores. 
-```{r}
+```{r warning=F, message=F}
 # install.packages("resample")
 library(resample)
 # concorrente: boot
@@ -91,7 +90,7 @@ ggplot(medianas.matrix, aes(x = titulo, ymin = limite.inferior, ymax = limite.su
 Observando os resultados obtidos podemos afirmar que o primeiro filme de Matrix é realmente melhor que os outros, de acordo com as avaliações. Comparando os outros dois, vemos que o resultado é básicamente o mesmo, os filmes Matrix Reloaded e  Matrix Revolutions estão na mesma colocação segundo as avaliações. Sobre essa igualdade dos resultados dos dois últimos filmes, fizemos a diferença entre as medianas e o resultado observado foi o mesmo. 
 Vamos observar as variações entre as notas dos filmes:
 
-```{r}
+```{r warning=F, message=F}
 g <- ggplot(matrix.movies, aes(x=rating, y=userId)) + geom_point()
 g + facet_grid(. ~ title, scales = c("free_y"))
 
@@ -99,39 +98,85 @@ g + facet_grid(. ~ title, scales = c("free_y"))
 Analisando as notas atribuidas pelos usuários, podemos concluir que as observações feitas antes, condizem com a realidade. O primeiro filme é bem considerado como o melhor e os outros dois tem as avaliações bem parecidas. 
 
 
-## Pergunta 2
-Normalmente os filmes têm vários gêneros. Existe uma relação entre em quantos gêneros os filmes se encaixam e a avaliação que os filmes recebem? Mais especificamente: se consideramos a os filmes com 1, 2, 3 ... gêneros, existe alguma quantidade de gêneros num mesmo filme que em geral recebe avaliações melhores? Caso exista, estime a diferença entre essa combinação e filmes com apenas um gênero. (Repare que você terá que escolher que medida você comparará: média, mediana, etc.)
+## Parte 2
+Na segunda parte da nossa análise, vamos observar o relacionamento existente entre a quantidade de gêneros que cada filme possui. Temos o objetivos de verificar se existe realmente uma correlação com a quantidade de gêneros que os filmes tem e as avaliações que eles recebem. 
+Vamos dar uma olhada nos dados.
 
-```{r pressure, echo=FALSE}
+```{r warning=F, message=F}
+head(movies)
+```
 
-movie.genre <- read.csv("dados/movie-genre.csv")
+Para facilitar nossa análise, obtivemos os dados anteriores em um formato diferente. Os filmes foram separados por um único gênero.
+```{r warning=F, message=F}
+head(movie.genre)
+
+```
+
+Iniciando nossa análise, tivemos que organizar os dados e retirar algumas não conformidades, como os filmes que não possuiam gênero.
+
+```{r warning=F, message=F}
+
 genre.median <- data.frame(movieId=numeric(0), n=numeric(0), mediana=numeric(0))
 
 
 for(id in 1:149532){
- #se existir filme com id n
- if(nrow( subset(movie.genre, movieId == id) ) > 0){
-   
-   id <- as.numeric(id)
-   avaliacoes1 <- subset(rating, movieId == id)
-   #se esse filme possui avaliacoes
-   if(nrow(avaliacoes1) > 0){
-     
-     # se filme possui um gênero e é no genre
-     if(length(movie.genre$genre[movie.genre$movieId==id]) == 1 & movie.genre$genre[movie.genre$movieId==id]  == "(no genres listed)"){
-       v.n <- 0
-     }
-     else{
-         # n é quantidade de gêneros
-         v.n <- as.numeric(sum(movie.genre$movieId == id))
-     }
-     # calcula mediana de avaliaçÕes do filme
-     v.mediana <- median(avaliacoes1$rating)
-     # adiciona na tabela
-     genre.median <- rbind(genre.median, data.frame(movieId = id, n = v.n, mediana = v.mediana))
-   }
- }
+  #se existir filme com id n
+  if(nrow( subset(movie.genre, movieId == id) ) > 0){
+
+    id <- as.numeric(id)
+    avaliacoes1 <- subset(rating, movieId == id)
+    #se esse filme possui avaliacoes
+    if(nrow(avaliacoes1) > 0){
+
+      # se filme possui um gênero e é no genre
+      if(length(movie.genre$genre[movie.genre$movieId==id]) == 1 & movie.genre$genre[movie.genre$movieId==id]  == "(no genres listed)"){
+        v.n <- 0
+      }
+      else{
+          # n é quantidade de gêneros
+          v.n <- as.numeric(sum(movie.genre$movieId == id))
+      }
+      # calcula mediana de avaliaçÕes do filme
+      v.mediana <- median(avaliacoes1$rating)
+      # adiciona na tabela
+      genre.median <- rbind(genre.median, data.frame(movieId = id, n = v.n, mediana = v.mediana))
+    }
+  }
 }
 
+str(genre.median)
+
+```
+Iremos novamente aplicar bootstrap nessa amostra de dados. Para melhorar a nossa observação, foram descartados os filmes que possuem mais de seis gêneros. O resultado é um gráfico como o anterior, mas agora representando os intervalos com valores que as medianas podem assumir em cada grupo.
+```{r warning=F, message=F}
+df <- data.frame()
+
+for(i in 1:6){
+  b = bootstrap(subset(genre.median, n==i) , median(mediana))
+  median.mv = CI.percentile(b, probs = c(.025, .975))
+  df <- data.frame(rbind(df, data.frame(median.mv)))
+}
+
+df$Generos = c(1,2,3,4,5,6)
+
+df %>% 
+  ggplot(aes(x = Generos, ymin = X2.5., ymax = X97.5.)) + 
+  geom_errorbar(width = .1) + labs(x="Quantidade de gêneros", y="Mediana")
 ```
 
+Observando os resultados obtidos, conseguimos notar que existem grupos que possuem o mesmo comportamento, por exemplo o grupo 1 e 2, 3 e 4. Vemos que os quatro últimos grupos possuem o valor máximo da mediana é 3.5, mas só o grupo de filmes com 5 gêneros possui um intervalo sem variação.
+Concluímos que os filmes classificados com 5 gêneros em geral são melhores avaliados.
+
+Para comparar o grupo recem selecionado como o de melhores avaliações com o que receber apenas uma avaliação, presisamos fazer o bootstrap da diferença de suas respectivas medianas. Então fazemos:
+```{r warning=F, message=F}
+b.diff.means = bootstrap2(data = subset(genre.median, mediana == 5)$mediana, 
+                          data2 = subset(genre.median, mediana == 1)$mediana, 
+                          median)
+
+means.diff = CI.percentile(b.diff.means, probs = c(.025, .975))
+means.diff
+
+data.frame(means.diff) %>% 
+  ggplot(aes(x = "Diferença", ymin = X2.5., ymax = X97.5.)) + 
+  geom_errorbar(width = .2)
+```
