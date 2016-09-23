@@ -1,6 +1,7 @@
 library(shiny)
 library(ggplot2)
 library(dplyr)
+library(stringr)
 
 source("import_data.R")
 import_data()
@@ -16,6 +17,8 @@ import_data()
 
 #Resposta 4
 #Essa é uma análise simples, acredito que conseguiremos montar um ranking dos gêneros mais populares a partir de cada ano.
+
+
 
 
 # Define server logic required to draw a histogram
