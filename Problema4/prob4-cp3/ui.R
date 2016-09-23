@@ -1,33 +1,23 @@
-#
-# This is the user-interface definition of a Shiny web application. You can
-# run the application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-# 
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
+library(plotly)
 
-# Define UI for application that draws a histogram
+
 shinyUI(fluidPage(
-  
-  # Application title
-  titlePanel("Old Faithful Geyser Data"),
-  
-  # Sidebar with a slider input for number of bins 
-  sidebarLayout(
-    sidebarPanel(
-       sliderInput("bins",
-                   "Number of bins:",
-                   min = 1,
-                   max = 50,
-                   value = 30)
+  titlePanel("Análise dos filmes por gênero entre 1902 e 2016"),
+  sidebarPanel(
+    selectInput("genre", "Genre (a movie can have multiple genres)",
+                c("Action", "Adventure", "Animation","Children", "Comedy", "Crime", 
+                  "Documentary", "Drama", "Fantasy", "Film-Noir", "Horror", "IMAX", 
+                  "Musical", "Mystery", "Romance", "Sci-Fi", "Thriller","War","Western")
     ),
+    sliderInput("year", "Year released", 1902, 2016, value = c(1902, 2016))
     
-    # Show a plot of the generated distribution
-    mainPanel(
-       plotOutput("distPlot")
-    )
+    
+  ),
+  mainPanel(
+    plotlyOutput("trendPlot")
+    #plotOutput("medianaPlot")
   )
 ))
+
+

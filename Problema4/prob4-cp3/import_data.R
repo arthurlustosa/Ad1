@@ -1,19 +1,28 @@
 import_data <- function() {
   if (!exists("movies") || is.null(movies)) {
-    movies = read.csv("dados/ml-latest-small/movies.csv")
-    movies <- movies %>%
-      mutate(
-        year = str_sub(title, -5, -2)
-      )
+    movies = read.csv("../dados/ml-latest-small/movies.csv")
+    movies.genre = read.csv("../dados/movie-genre.csv")
   }
   if (!exists("ratings") || is.null(ratings)) {
-    rating = read.csv("dados/ml-latest-small/ratings.csv", stringsAsFactors = F)
+    ratings = read.csv("../dados/ml-latest-small/ratings.csv")
   }
-  movies.with.rating <- inner_join(movies, rating, by="movieId")
-  movies.with.rating2 <- movie.genre %>%
-    mutate(
-      year = str_sub(title, -5, -2)
-    )
+  medianas.ano <- read.csv("../dados/medianas_filme.csv")
+  filmes.ano = read.csv("../dados/filmes.ano.csv", stringsAsFactors = F)
+  dados.completo.filmes <- inner_join(filmes.ano, movies.genre, by="movieId")
+  
+  filmes.ano = merge(filmes.ano, dados.completo.filmes)
+  filmes.ano <- filmes.ano %>%
+    mutate(ano = as.numeric(filmes.ano$ano)) %>% 
+    select(movieId, title.x, ano, genre, popularity, rating)
+  
   
 
+
 }
+
+
+
+
+
+
+
