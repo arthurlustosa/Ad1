@@ -5,16 +5,24 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library(dplyr)
+require(GGally)
 
 dados <- read.csv("dados/speed-dating.csv")
 ```
 
-
+O clima de amor está no ar. Os dados utlizados nessa análise são referentes a várias rodadas de encontros relâmpagos (Speed Dating) entre 310 jovens americanos. A princípio os dados foram reduzidos, retiradas algumas colunas, para agilizar o processamento, os dados foram coletados por professores da Columbiam Business School. 
+Como a coleta dos dados ocorreu? Os participantes dos encontros preencheram fichas referentes a cada um dos encontros que participou durante a noite, cada encontro durava em torno de 4 minutos. Cada linha da tabela representa um encontro.
+Vamos iniciar nossa análise dando uma olhada nos dados. 
 ```{r}
+summary(dados)
 
+```
 
+Os dados possuem muitas variáveis, a ideia a seguir é utilizar a técnica de PCA e tentarmos encontrar um número menor de variáveis significativas para nossos dados. 
 
+```{r, message=FALSE, warning=FALSE, autosize=T, width=900, height=600}
 
 
 ```
+
 
