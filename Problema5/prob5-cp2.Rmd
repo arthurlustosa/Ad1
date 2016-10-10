@@ -4,54 +4,77 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-library(dplyr)
 require(GGally)
 library(ggplot2)
-theme_set(theme_bw())
+library(pscl)
+library(dplyr, warn.conflicts = FALSE)
 library(broom)
-
-
-dados <- read.csv("dados/speed-dating.csv")
 ```
 
-O clima de amor está no ar. Os dados utlizados nessa análise são referentes a várias rodadas de encontros relâmpagos (Speed Dating) entre 310 jovens americanos. A princípio os dados foram reduzidos, retiradas algumas colunas, para agilizar o processamento, os dados foram coletados por professores da Columbiam Business School. 
+O clima de amor está no ar. 
+Os dados utlizados nessa análise são referentes a várias rodadas de encontros relâmpagos (Speed Dating) entre 310 jovens americanos. A princípio os dados foram reduzidos, retiradas algumas colunas, para agilizar o processamento, os dados foram coletados por professores da Columbiam Business School. 
 Como a coleta dos dados ocorreu? Os participantes dos encontros preencheram fichas referentes a cada um dos encontros que participou durante a noite, cada encontro durava em torno de 4 minutos. Cada linha da tabela representa um encontro.
 Vamos iniciar nossa análise dando uma olhada nos dados. 
 ```{r}
 # a correlação dos interesses (int_corr) de p1 e p2 influencia a probabilidade (prob) deles terem um novo encontro?
 # quais variaveis mais influenciam na probabilidade de p1 achar que p2 toparia outro encontro?
 
+dados <- read.csv("dados/speed-dating.csv")
+
+#summary(dados)
+
+dados = data.frame(dados$iid, dados$gender, dados$int_corr, dados$attr, dados$reading, dados$museums, dados$art, dados$concerts, dados$shar, dados$like, dados$prob, dados$intel3_s)
+names(dados) <- c("id", "gender", "corr", "attr", "reading", "museums", "art", "concerts", "shar", "like", "prob", "selfIntel")
 
 
-summary(dados)
+```
 
-ggplot(dados[1:10,], aes(x = int_corr, y = prob)) + 
-  geom_point(alpha = 0.4)
+###Probabilidade de um novo encontro x Correlação de Interesses
+No decorrer do encontro, os pretendentes vão preenchendo uma ficha com algumas informações sobre seus interesses e algumas perguntas sobre o outro. Uma dessas informações é a probabilidade que a pessoa 1 acha que a pessoa 2 aceitaria sair novamente. 
+Utilizando a variável, queremos saber se essa probabilidade é influênciada pela correlação entre os interesses de ambos. 
+Vamos dar uma olhada se existe uma relação entre a probabilidade e a correlação dos interesses.
 
-ggplot(dados, aes(x = age, y = attr)) + 
-  geom_hex()
+```{r}
+ggplot(dados, aes(y=dados$prob, x=dados$corr)) +
+  geom_point(alpha = 0.1, position = position_jitter(width = 0.3), color="blue") +
+  labs(title="C", x= "Correlação", y="Probabilidade")
 
+```
+
+Analisando o gráfico, conseguimos ver uma mancha mais escura na região central, o que poderia ser uma correlação relativamente baixa entre os interesses poderia ter uma probabilidade de um encontro futuro em torno de 50% de chances.
+Definimos agora nosso modelo de regressão linear, onde pretendemos descobrir a significância da relação probabilidade de um novo encontro e correlação de interesses entre os pretendentes realmente existe. 
+
+```{r}
+#modelo
+probCorrMod = lm(prob ~ corr, data = dados)
+summary(probCorrMod)
+
+tidy(probCorrMod, conf.int = TRUE)
 
 ```
 
 ```{r}
-mod <- lm(attr ~ ., data = dados)
-# R básico:
-summary(mod)
-confint(mod)
-
-# broom: 
-tidy(mod, conf.int = TRUE)
-#glance(mod)
-
-ggplot(dados, aes(x = age, y = attr)) + 
-  geom_point(alpha = 0.4) + 
-  geom_line(aes(y = predict(mod, dados)), colour = "red")
-
-ggplot(mod, aes(hs_grad, .resid)) + 
-  geom_point(alpha = .4) + 
-  geom_hline(yintercept = 0, colour = "blue")
+#plot do modelo
+ggplot(dados, aes(dados$corr, dados$prob)) +  geom_point(alpha = 0.1, position = position_jitter(width = 0.3)) + 
+  labs(title="Previsão do modelo", x= "Correlação", y="Probabilidade") +  
+  geom_line(aes(y = predict(probCorrMod, dados)), colour = "red")
 
 ```
 
+Vamos analisar os resíduos agora.
+```{r}
+#residuos
+ggplot(probCorrMod, aes(corr, .resid)) + 
+  labs(title="Resíduos do modelo", x= "Correlação", y="Resíduos") +
+  geom_point(alpha = 0.1) +
+  geom_hline(yintercept = 0, colour = "blue")
 
+
+ggplot(probCorrMod, aes(.resid)) + labs(title="Frequência de resíduos", x= "Resíduo", y="Frequência") + 
+  geom_freqpoly(binwidth = 0.5) 
+
+
+```
+
+###Conclusões
+Analisando os resultados, percebemos que a probabilidade de um possível novo encontro não tem uma relação de significância alta com os interesses em comum. Logo, mesmo que a correlação entre os interesses seja baixa, próxima de zero, a probabilidade de um novo encontro chegar 40% e 50% de chances, ou seja, nada está perdido ainda. 
