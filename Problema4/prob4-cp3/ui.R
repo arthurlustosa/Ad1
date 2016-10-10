@@ -7,13 +7,11 @@ shinyUI(fluidPage(
   sidebarPanel(
     h4("Os dados"),
     p("Os dados são referentes a filmes e suas avaliações feitas por usuários entre os anos 1996 ate 2016. Os dataset possui filmes dos anos de 1902 até 2016."),
-    h4("Tratamento dos dados"),
-    p("Para realizarmos nossas visualizações, os dados iniciais precisaram ser tratados e os dataframes montados. Para entender o processo de tratamento dos dados clique no link abaixo."),
-    a("www.google.com"),
     h4("Questão 1"),
     p("Seria possível traçar uma linha cronológica de cada gênero mostrando os pontos máximos e então visualizarmos o comportamento de cada gênero nos respectivos anos.
 No primeiro gráfico conseguimos visualizar como os gêneros se comportam nos anos. Temos um traço (linha laranja) que normaliza a variação do comportamento dos valores. 
 "),
+    p("Por exemplo, esse primeiro gráfico nos mostra o comportamento do gênero Ação desde 1902 até 2015, vemos o ponto máximo no ano de 1948 e o mínimo no ano de 1991. Observamos também que o gênero ação sofre uma queda a partir de 1969, porém desde os anos 90 começa a subir no gosto popular."),
     h4("Para iniciar a visualização:"),
     h5("Escolha o gênero que você deseja visualizar a linha do tempo"),
     selectInput("genre", "Gênero",
@@ -41,6 +39,7 @@ A partir da validação dos resultados obtivos na primeira questão pelo gráfic
                   "Documentary", "Drama", "Fantasy", "Film-Noir", "Horror", "IMAX", 
                   "Musical", "Mystery", "Romance", "Sci-Fi", "Thriller","War","Western")
     ),
+    p("Por exemplo, temos a comparação entre os gêneros de ação e comédia, observamos que eles possuem um comportamento parecido em alguns anos, mas em outros nem tanto."),
     h4("Resultados"),
     p("Os resultados obtidos nas tentativas de resposta das duas questões foram bastante satisfatórios. Conseguimos observar de forma clara o comportamento dos gêneros cinematográficos no decorrer dos anos. Porém ao tentar responder as questões mostradas acima chegamos a outros questionamentos: Seria possível responder quais fatores influenciaram o crescimento ou decaimento de determinado gênero? Quais gêneros possuem mais correlação e quais não possuem?"),
     p("Acreditamos que essas questões podem ser respondidas no futuro.")
