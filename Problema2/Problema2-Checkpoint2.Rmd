@@ -16,6 +16,7 @@ library(plotly)
 
 ```
 
+### Discplina de Análise de Dados 1- Ciência da Computação UFCG - 2016.1
 
 ```{r}
 dados <- read.csv("dados/ano-atual.csv")
