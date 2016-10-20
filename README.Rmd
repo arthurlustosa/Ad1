@@ -1,0 +1,21 @@
+---
+title: "README"
+author: "arthur"
+date: "20 de outubro de 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## README
+Repositório dedicado aos trabalhos desenvolvidos na disciplina de Análise de Dados do curso de Ciência da Computação - UFCG
+A disciplina de Análise de Dados 1 foi ministrada pelo professor [Nazareno](https://github.com/nazareno) no período 2016.1.
+
+##Aprendizado
+AD1 foca no uso estatística para análise de dados usada para entender e explicar conjuntos de dados. Ao cursá-la, aprendi a usar ferramentas para explorar, descrever, comparar, agrupar e transformar dados de forma a entender padrões. Além disso, fiz uso de visualizações como ferramenta de análise, e pude apresentar meus resultados de uma forma mais elaborada.
+
+##Ementa da disciplina
+Conceitos básicos de estatística, estatística inferencial, estatística descritiva, representação gráfica de dados, representações gráficas como suporte ao pensamento analítico, técnicas de visualização de dados , mineração de dados, classificação, agrupamento, aplicações de mineração de dados, noções práticas de coleta, tratamento e processamento de dados para análise.
+
