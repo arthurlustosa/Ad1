@@ -1,13 +1,3 @@
----
-title: "README"
-author: "arthur"
-date: "20 de outubro de 2016"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 ## README
 Repositório dedicado aos trabalhos desenvolvidos na disciplina de Análise de Dados do curso de Ciência da Computação - UFCG
