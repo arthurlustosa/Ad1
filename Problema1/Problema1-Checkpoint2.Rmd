@@ -14,9 +14,11 @@ library(scales)
 theme_set(theme_bw())
 ```
 
-```{r}
-data <- read.csv("/home/arthur/workspace/lab1-ad1/dados/ano-atual.csv")
-cotas = read.csv("/home/arthur/workspace/lab1-ad1/dados/valor-cota-por-estado.csv", sep = ";", dec = ",")
+### Discplina de Análise de Dados 1- Ciência da Computação UFCG - 2016.1
+
+```{r, echo=F}
+data <- read.csv("dados/ano-atual.csv")
+cotas = read.csv("dados/valor-cota-por-estado.csv", sep = ";", dec = ",")
 names(cotas) = c("estado", "cota")
 ```
 

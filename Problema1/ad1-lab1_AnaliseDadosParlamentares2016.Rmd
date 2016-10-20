@@ -5,11 +5,10 @@ author: Arthur Lustosa
 date: 08/07/2016
 ---
 ```{r, echo=FALSE}
-#install.packages("dplyr")
-#install.packages("ggplot2")
+
 library(dplyr, warn.conflicts = FALSE)
 library(ggplot2)
-data <- read.csv("/home/arthur/workspace/lab1-ad1/dados/ano-atual.csv")
+data <- read.csv("dados/ano-atual.csv")
 
 #vendo os tipos de gastos
 tiposGastos <- unique(data$txtDescricao)
