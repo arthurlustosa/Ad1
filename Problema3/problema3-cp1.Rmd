@@ -15,6 +15,7 @@ library(ggdendro)
 
 ```
 
+### Discplina de Análise de Dados 1- Ciência da Computação UFCG - 2016.1
 
 ```{r}
 detalhes_emendas <- read.csv("dados/emendas_detalhes_parlamentar.csv")

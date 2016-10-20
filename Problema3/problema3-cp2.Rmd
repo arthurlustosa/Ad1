@@ -15,6 +15,7 @@ library(cluster)
 library(ggdendro)
 
 ```
+### Discplina de Análise de Dados 1- Ciência da Computação UFCG - 2016.1
 
 Nessa etapa do problema 3, continuamos nossa análise utlizando os dados sobre verbas alocadas por deputados para municípos, estados, fundações através de emendas parlamentares.
 
