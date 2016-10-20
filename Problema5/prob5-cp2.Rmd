@@ -11,6 +11,8 @@ library(dplyr, warn.conflicts = FALSE)
 library(broom)
 ```
 
+### Discplina de Análise de Dados 1- Ciência da Computação UFCG - 2016.1
+
 O clima de amor está no ar. 
 Os dados utlizados nessa análise são referentes a várias rodadas de encontros relâmpagos (Speed Dating) entre 310 jovens americanos. A princípio os dados foram reduzidos, retiradas algumas colunas, para agilizar o processamento, os dados foram coletados por professores da Columbiam Business School. 
 Como a coleta dos dados ocorreu? Os participantes dos encontros preencheram fichas referentes a cada um dos encontros que participou durante a noite, cada encontro durava em torno de 4 minutos. Cada linha da tabela representa um encontro.
